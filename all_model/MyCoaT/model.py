@@ -345,11 +345,18 @@ class MyCoaT(nn.Module):
                  num_heads=0, mlp_ratios=[0, 0, 0, 0], qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=partial(nn.LayerNorm, eps=1e-6),
                  return_interm_layers=False, out_features=None, crpe_window={3:2, 5:3, 7:3},
-                 **kwargs):
+                 add_historgram=False, his_channel=192, **kwargs):
         super().__init__()
         self.return_interm_layers = return_interm_layers
         self.out_features = out_features
         self.num_classes = num_classes
+        self.add_historgram = add_historgram
+
+        # Historgram embeddings.
+        self.historgram_embed1 = nn.Linear(his_channel, embed_dims[0])
+        self.historgram_embed2 = nn.Linear(his_channel, embed_dims[1])
+        self.historgram_embed3 = nn.Linear(his_channel, embed_dims[2])
+        self.historgram_embed4 = nn.Linear(his_channel, embed_dims[3])
 
         # Patch embeddings.
         self.patch_embed1 = PatchEmbed(patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dims[0])

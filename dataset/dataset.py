@@ -68,4 +68,59 @@ class Dataset_Ucolor(data.Dataset):
     
     def __len__(self):
         return len(self.filenames)
+
+class Dataset_Ranker(data.Dataset):
+    def __init__(self, opt, type="train"):
+        self.opt = opt
+        self.type = type
+        self.filenames = open(opt[self.type+'_list_path']).readlines()
         
+    def __getitem__(self, index):
+        if self.type == "train":
+            # random choose the ranks
+            random_rank = np.random.randint(0, 10, 2)
+            while random_rank[0] == random_rank[1]:
+                random_rank = np.random.randint(0, 10, 2)
+            high_rank = np.min(random_rank)
+            low_rank = np.max(random_rank)
+            
+            # read image pair
+            high_path = os.path.join(self.opt['root'], self.filenames[index * 10 + high_rank][:-1])
+            low_path = os.path.join(self.opt['root'], self.filenames[index * 10 + low_rank][:-1])
+            high_img = Image.open(high_path)
+            low_img = Image.open(low_path)
+            img_w, img_h = high_img.size[0], high_img.size[1]
+            
+            # data augumentations
+            high_img = transforms.Resize((img_h//2, img_w//2))(high_img)
+            low_img = transforms.Resize((img_h//2, img_w//2))(low_img)
+            
+            high_img = transforms.ToTensor()(high_img)
+            low_img = transforms.ToTensor()(low_img)
+            if np.random.rand(1) < 0.5:  # flip horizonly
+                high_img = torch.flip(high_img, [2])
+                low_img = torch.flip(low_img, [2])
+            if np.random.rand(1) < 0.5:  # flip vertically
+                high_img = torch.flip(high_img, [1])
+                low_img = torch.flip(low_img, [1])
+                
+            output = {
+                'high_img': high_img,
+                'low_img': low_img,
+                'high_rank': high_rank,
+                'low_rank': low_rank
+            }
+            return output
+
+        elif self.type == "test":
+            img_path = os.path.join(self.opt['root'], self.filenames[index][:-1])
+            img = Image.open(img_path)
+            img_w, img_h = img.size[0], img.size[1]
+            
+            img = transforms.Resize((img_h//2, img_w//2))(img)
+            img = transforms.ToTensor()(img)
+        
+            return img
+    
+    def __len__(self):
+        return len(self.filenames) // 10 if self.type == "train" else len(self.filenames)
