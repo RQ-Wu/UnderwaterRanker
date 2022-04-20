@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 from random import Random
 import matplotlib.pyplot as plt
+from utils import build_historgram
 
 class Dataset_Ucolor(data.Dataset):
     def __init__(self, opt, type="train", **kwargs):
@@ -103,24 +104,34 @@ class Dataset_Ranker(data.Dataset):
             if np.random.rand(1) < 0.5:  # flip vertically
                 high_img = torch.flip(high_img, [1])
                 low_img = torch.flip(low_img, [1])
-                
+            
+            high_his = build_historgram(high_img)
+            low_his = build_historgram(low_img)
+
             output = {
                 'high_img': high_img,
                 'low_img': low_img,
+                'high_his': high_his,
+                'low_his': low_his,
                 'high_rank': high_rank,
                 'low_rank': low_rank
             }
-            return output
 
         elif self.type == "test":
             img_path = os.path.join(self.opt['root'], self.filenames[index][:-1])
             img = Image.open(img_path)
             img_w, img_h = img.size[0], img.size[1]
             
-            img = transforms.Resize((img_h//2, img_w//2))(img)
+            # img = transforms.Resize((img_h//2, img_w//2))(img)
             img = transforms.ToTensor()(img)
+            img_his = build_historgram()
+
+            output = {
+                'img': img,
+                'img_his': img_his
+            }
+
+        return output
         
-            return img
-    
     def __len__(self):
         return len(self.filenames) // 10 if self.type == "train" else len(self.filenames)

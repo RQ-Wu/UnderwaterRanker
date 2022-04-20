@@ -1,3 +1,5 @@
+# setting for training UColor with Ranker loss
+
 dataset:
     dataset_name : Dataset_Ucolor
     root : ../dataset/UIEB_all/Ucolor_npy

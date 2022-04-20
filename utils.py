@@ -134,3 +134,12 @@ def normalize_img(img):
     # img[img < 0] = 0.0
     
     return img
+
+def build_historgram(img):
+    r_his = torch.histc(img[0], 64, min=0.0, max=1.0)
+    g_his = torch.histc(img[1], 64, min=0.0, max=1.0)
+    b_his = torch.histc(img[2], 64, min=0.0, max=1.0)
+
+    historgram = torch.cat((r_his, g_his, b_his)).unsqueeze(0)
+
+    return historgram
