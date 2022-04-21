@@ -91,11 +91,12 @@ class ConvRelPosEnc(nn.Module):
     def forward(self, q, v, size):
         B, h, N, Ch = q.shape
         H, W = size
-        assert N == 1 + H * W
-
+        assert N == 1 + H * W or N == 2 + H * W
+        
+        diff = N - H * W
         # Convolutional relative position encoding.
-        q_img = q[:,:,1:,:]                                                              # Shape: [B, h, H*W, Ch].
-        v_img = v[:,:,1:,:]                                                              # Shape: [B, h, H*W, Ch].
+        q_img = q[:,:,diff:,:]                                                              # Shape: [B, h, H*W, Ch].
+        v_img = v[:,:,diff:,:]                                                              # Shape: [B, h, H*W, Ch].
         
         v_img = rearrange(v_img, 'B h (H W) Ch -> B (h Ch) H W', H=H, W=W)               # Shape: [B, h, H*W, Ch] -> [B, h*Ch, H, W].
         v_img_list = torch.split(v_img, self.channel_splits, dim=1)                      # Split according to channels.
@@ -104,7 +105,7 @@ class ConvRelPosEnc(nn.Module):
         conv_v_img = rearrange(conv_v_img, 'B (h Ch) H W -> B h (H W) Ch', h=h)          # Shape: [B, h*Ch, H, W] -> [B, h, H*W, Ch].
 
         EV_hat_img = q_img * conv_v_img
-        zero = torch.zeros((B, h, 1, Ch), dtype=q.dtype, layout=q.layout, device=q.device)
+        zero = torch.zeros((B, h, diff, Ch), dtype=q.dtype, layout=q.layout, device=q.device)
         EV_hat = torch.cat((zero, EV_hat_img), dim=2)                                # Shape: [B, h, N, Ch].
 
         return EV_hat
@@ -163,18 +164,18 @@ class ConvPosEnc(nn.Module):
     def forward(self, x, size):
         B, N, C = x.shape
         H, W = size
-        assert N == 1 + H * W
-
+        assert N == 1 + H * W or N == 2 + H * W
+        diff = N - H * W
         # Extract CLS token and image tokens.
-        cls_token, img_tokens = x[:, :1], x[:, 1:]                                       # Shape: [B, 1, C], [B, H*W, C].
-        
+        other_token, img_tokens = x[:, :diff], x[:, diff:]                                       # Shape: [B, 2, C], [B, H*W, C].
+            
         # Depthwise convolution.
         feat = img_tokens.transpose(1, 2).view(B, C, H, W)
         x = self.proj(feat) + feat
         x = x.flatten(2).transpose(1, 2)
 
         # Combine with CLS token.
-        x = torch.cat((cls_token, x), dim=1)
+        x = torch.cat((other_token, x), dim=1)
 
         return x
 
@@ -352,11 +353,12 @@ class MyCoaT(nn.Module):
         self.num_classes = num_classes
         self.add_historgram = add_historgram
 
-        # Historgram embeddings.
-        self.historgram_embed1 = nn.Linear(his_channel, embed_dims[0])
-        self.historgram_embed2 = nn.Linear(his_channel, embed_dims[1])
-        self.historgram_embed3 = nn.Linear(his_channel, embed_dims[2])
-        self.historgram_embed4 = nn.Linear(his_channel, embed_dims[3])
+        if self.add_historgram:
+            # Historgram embeddings.
+            self.historgram_embed1 = nn.Linear(his_channel, embed_dims[0])
+            self.historgram_embed2 = nn.Linear(his_channel, embed_dims[1])
+            self.historgram_embed3 = nn.Linear(his_channel, embed_dims[2])
+            self.historgram_embed4 = nn.Linear(his_channel, embed_dims[3])
 
         # Patch embeddings.
         self.patch_embed1 = PatchEmbed(patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dims[0])
@@ -488,44 +490,56 @@ class MyCoaT(nn.Module):
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
         return x
+    
+    def insert_his(self, x, his_token):
+        x = torch.cat((his_token, x), dim=1)
+        return x
 
-    def remove_cls(self, x):
+    def remove_token(self, x):
         """ Remove CLS token. """
-        return x[:, 1:, :]
+        return x[:, 2:, :]
 
-    def forward_features(self, x0):
+    def forward_features(self, x0, x_his):
         B = x0.shape[0]
 
         # Serial blocks 1.
         x1, (H1, W1) = self.patch_embed1(x0)
+        if self.add_historgram:
+            x1 = self.insert_his(x1, self.historgram_embed1(x_his))
         x1 = self.insert_cls(x1, self.cls_token1)
         for blk in self.serial_blocks1:
             x1 = blk(x1, size=(H1, W1))
-        x1_nocls = self.remove_cls(x1)
+        x1_nocls = self.remove_token(x1)
         x1_nocls = x1_nocls.reshape(B, H1, W1, -1).permute(0, 3, 1, 2).contiguous()
         
         # Serial blocks 2.
         x2, (H2, W2) = self.patch_embed2(x1_nocls)
+        if self.add_historgram:
+            x2 = self.insert_his(x2, self.historgram_embed2(x_his))
         x2 = self.insert_cls(x2, self.cls_token2)
         for blk in self.serial_blocks2:
             x2 = blk(x2, size=(H2, W2))
-        x2_nocls = self.remove_cls(x2)
+        x2_nocls = self.remove_token(x2)
         x2_nocls = x2_nocls.reshape(B, H2, W2, -1).permute(0, 3, 1, 2).contiguous()
 
         # Serial blocks 3.
         x3, (H3, W3) = self.patch_embed3(x2_nocls)
+        if self.add_historgram:
+            x3 = self.insert_his(x3, self.historgram_embed3(x_his))
         x3 = self.insert_cls(x3, self.cls_token3)
         for blk in self.serial_blocks3:
             x3 = blk(x3, size=(H3, W3))
-        x3_nocls = self.remove_cls(x3)
+        x3_nocls = self.remove_token(x3)
         x3_nocls = x3_nocls.reshape(B, H3, W3, -1).permute(0, 3, 1, 2).contiguous()
 
         # Serial blocks 4.
         x4, (H4, W4) = self.patch_embed4(x3_nocls)
+        if self.add_historgram:
+            x4 = self.insert_his(x4, self.historgram_embed4(x_his))
         x4 = self.insert_cls(x4, self.cls_token4)
         for blk in self.serial_blocks4:
             x4 = blk(x4, size=(H4, W4))
-        x4_nocls = self.remove_cls(x4)
+        x4_nocls = self.remove_token(x4)
         x4_nocls = x4_nocls.reshape(B, H4, W4, -1).permute(0, 3, 1, 2).contiguous()
 
         # Only serial blocks: Early return.
@@ -553,19 +567,19 @@ class MyCoaT(nn.Module):
         if self.return_interm_layers:       # Return intermediate features for down-stream tasks (e.g. Deformable DETR and Detectron2).
             feat_out = {}   
             if 'x1_nocls' in self.out_features:
-                x1_nocls = self.remove_cls(x1)
+                x1_nocls = self.remove_token(x1)
                 x1_nocls = x1_nocls.reshape(B, H1, W1, -1).permute(0, 3, 1, 2).contiguous()
                 feat_out['x1_nocls'] = x1_nocls
             if 'x2_nocls' in self.out_features:
-                x2_nocls = self.remove_cls(x2)
+                x2_nocls = self.remove_token(x2)
                 x2_nocls = x2_nocls.reshape(B, H2, W2, -1).permute(0, 3, 1, 2).contiguous()
                 feat_out['x2_nocls'] = x2_nocls
             if 'x3_nocls' in self.out_features:
-                x3_nocls = self.remove_cls(x3)
+                x3_nocls = self.remove_token(x3)
                 x3_nocls = x3_nocls.reshape(B, H3, W3, -1).permute(0, 3, 1, 2).contiguous()
                 feat_out['x3_nocls'] = x3_nocls
             if 'x4_nocls' in self.out_features:
-                x4_nocls = self.remove_cls(x4)
+                x4_nocls = self.remove_token(x4)
                 x4_nocls = x4_nocls.reshape(B, H4, W4, -1).permute(0, 3, 1, 2).contiguous()
                 feat_out['x4_nocls'] = x4_nocls
             return feat_out
