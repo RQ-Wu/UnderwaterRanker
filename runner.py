@@ -213,8 +213,7 @@ class Ranker_Runner():
             )
             if np.max(np.array(srocc_list)) == srocc or np.max(np.array(krocc_list)) == krocc:
                 self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> SROCC: {srocc}, KROCC: {krocc}\n")
-                if epoch > 80:
-                    self.save(epoch, srocc, krocc)
+                self.save(epoch)
             print()
 
     def main_test_loop(self):
@@ -280,7 +279,7 @@ class Ranker_Runner():
                     preds[iter_num % 10] = pred.cpu().detach().numpy()
                     torch.cuda.empty_cache()
                     # calculate score
-                    if iter_num % 10 == 0 and iter_num != 0:
+                    if (iter_num + 1) % 10 == 0:
                         step_num = iter_num // 10
                         srocc, _ = spearmanr(preds, score)
                         krocc, _ = kendalltau(preds, score)
@@ -299,7 +298,8 @@ class Ranker_Runner():
         return srocc_meter.avg, krocc_meter.avg
             
     
-    def save(self, epoch_num, psnr, ssim):
+    def save(self, epoch_num):
+        best_range = (epoch_num // 50 + 1) * 5
         # path for saving
         path = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'])
         utils.make_dir(path)
@@ -309,7 +309,7 @@ class Ranker_Runner():
         'optimizer':self.optimizer.state_dict(),
         "epoch": epoch_num
         }
-        torch.save(checkpoint, os.path.join(path, f'checkpoint_{epoch_num}_psnr{psnr}_ssim{ssim}.pth'))
+        torch.save(checkpoint, os.path.join(path, f'checkpoint_{best_range}best.pth'))
     
     def build_loss(self, result1, result2):
         L_final = loss.rank_loss(result1['final_result'], result2['final_result'])
