@@ -88,6 +88,7 @@ class Dataset_Ranker(data.Dataset):
             # read image pair
             high_path = os.path.join(self.opt['root'], self.filenames[index * 10 + high_rank][:-1])
             low_path = os.path.join(self.opt['root'], self.filenames[index * 10 + low_rank][:-1])
+            
             high_img = Image.open(high_path)
             low_img = Image.open(low_path)
             img_w, img_h = high_img.size[0], high_img.size[1]
@@ -104,15 +105,10 @@ class Dataset_Ranker(data.Dataset):
             if np.random.rand(1) < 0.5:  # flip vertically
                 high_img = torch.flip(high_img, [1])
                 low_img = torch.flip(low_img, [1])
-            
-            high_his = build_historgram(high_img)
-            low_his = build_historgram(low_img)
 
             output = {
                 'high_img': high_img,
                 'low_img': low_img,
-                'high_his': high_his,
-                'low_his': low_his,
                 'high_rank': high_rank,
                 'low_rank': low_rank
             }
@@ -122,13 +118,11 @@ class Dataset_Ranker(data.Dataset):
             img = Image.open(img_path)
             img_w, img_h = img.size[0], img.size[1]
             
-            # img = transforms.Resize((img_h//2, img_w//2))(img)
+            img = transforms.Resize((img_h//2, img_w//2))(img)
             img = transforms.ToTensor()(img)
-            img_his = build_historgram()
 
             output = {
-                'img': img,
-                'img_his': img_his
+                'img': img
             }
 
         return output

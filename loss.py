@@ -2,6 +2,15 @@ import torch.nn as nn
 from torchvision.models.vgg import vgg16
 import torch
 import torch.nn.functional as F
+
+def rank_loss(x1, x2):
+    rank_loss = nn.MarginRankingLoss(margin=0.5).cuda()
+    x1 = torch.clamp(x1, min=-5, max=5)
+    x2 = torch.clamp(x2, min=-5, max=5)
+    L_rank = rank_loss(x1, x2, torch.zeros_like(x1).cuda()+1.0)
+    
+    return L_rank
+
 def ranker_loss(model, img):
     # with torch.no_grad():
     score = model(img)['final_result']

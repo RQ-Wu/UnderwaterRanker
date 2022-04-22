@@ -135,11 +135,59 @@ def normalize_img(img):
     
     return img
 
-def build_historgram(img):
-    r_his = torch.histc(img[0], 64, min=0.0, max=1.0)
-    g_his = torch.histc(img[1], 64, min=0.0, max=1.0)
-    b_his = torch.histc(img[2], 64, min=0.0, max=1.0)
+def preprocessing(d_img_org):
+        # is_cuda = d_img_org.is_cuda
+        # scale_1 = 384
+        # scale_2 = 224
+        # b, c, h, w = d_img_org.shape
 
-    historgram = torch.cat((r_his, g_his, b_his)).unsqueeze(0)
+        # alpha_1 = scale_1 / np.max(np.asarray([h, w]))
+        # alpha_2 = scale_2 / np.max(np.asarray([h, w]))
+        # d_img_scale_1 = nn.Upsample(size=(int(h*alpha_1), int(w*alpha_1)))(d_img_org)
+        # d_img_scale_2 = nn.Upsample(size=(int(h*alpha_2), int(w*alpha_2)))(d_img_org)
+        
+        d_img_org = padding_img(d_img_org)
+        # d_img_scale_1 = padding_img(d_img_scale_1)
+        # d_img_scale_2 = padding_img(d_img_scale_2)
+        
+        # n_enc_seq = 1 + (math.ceil(h / 32)) * math.ceil(w / 32) + (d_img_scale_1.shape[2] // 32) * (d_img_scale_1.shape[3] // 32) + (d_img_scale_2.shape[2] // 32) * (d_img_scale_2.shape[3] // 32)
+        # mask_inputs = torch.ones(b, n_enc_seq)
+        
+        # if is_cuda:
+        #     mask_inputs = mask_inputs.cuda()
+            
+        # return {
+        #     'mask_inputs': mask_inputs,
+        #     'd_img_org': d_img_org,
+        #     'd_img_scale_1': d_img_scale_1,
+        #     'd_img_scale_2': d_img_scale_2
+        # }
+        x_his = build_historgram(d_img_org)
+        return {
+            'x': d_img_org,
+            'x_his': x_his
+        }
+        
+def padding_img(img):
+    b, c, h, w = img.shape
+    h_out = math.ceil(h / 32) * 32
+    w_out = math.ceil(w / 32) * 32
+    
+    left_pad = (w_out- w) // 2
+    right_pad = w_out - w - left_pad
+    top_pad  = (h_out - h) // 2
+    bottom_pad = h_out - h - top_pad
+    
+    img = nn.ZeroPad2d((left_pad, right_pad, top_pad, bottom_pad))(img)
+    
+    return img
+
+def build_historgram(img):
+    r_his = torch.histc(img[0][0], 64, min=0.0, max=1.0)
+    g_his = torch.histc(img[0][1], 64, min=0.0, max=1.0)
+    b_his = torch.histc(img[0][2], 64, min=0.0, max=1.0)
+
+    historgram = torch.cat((r_his, g_his, b_his)).unsqueeze(0).unsqueeze(0
+    )
 
     return historgram

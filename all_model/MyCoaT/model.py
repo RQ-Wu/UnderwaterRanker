@@ -265,16 +265,17 @@ class ParallelBlock(nn.Module):
         """ Feature map interpolation. """
         B, N, C = x.shape
         H, W = size
-        assert N == 1 + H * W
+        assert N == 1 + H * W or 2 + H * W
 
-        cls_token  = x[:, :1, :]
-        img_tokens = x[:, 1:, :]
+        diff = N - H * W
+        other_token  = x[:, :diff, :]
+        img_tokens = x[:, diff:, :]
         
         img_tokens = img_tokens.transpose(1, 2).reshape(B, C, H, W)
         img_tokens = F.interpolate(img_tokens, size=output_size, mode='bilinear')  # FIXME: May have alignment issue.
         img_tokens = img_tokens.reshape(B, C, -1).transpose(1, 2)
         
-        out = torch.cat((cls_token, img_tokens), dim=1)
+        out = torch.cat((other_token, img_tokens), dim=1)
 
         return out
 
@@ -497,7 +498,10 @@ class MyCoaT(nn.Module):
 
     def remove_token(self, x):
         """ Remove CLS token. """
-        return x[:, 2:, :]
+        if self.add_historgram:
+            return x[:, 2:, :]
+        else:
+            return x[:, 1:, :]
 
     def forward_features(self, x0, x_his):
         B = x0.shape[0]
@@ -593,11 +597,11 @@ class MyCoaT(nn.Module):
 
             return x2_cls, x3_cls, x4_cls
 
-    def forward(self, x):
+    def forward(self, x, x_his):
         if self.return_interm_layers:       # Return intermediate features (for down-stream tasks).
-            return self.forward_features(x)
+            return self.forward_features(x, x_his)
         else:                               # Return features for classification.
-            x2, x3, x4 = self.forward_features(x) 
+            x2, x3, x4 = self.forward_features(x, x_his) 
             pred2 = self.head2(x2)
             pred3 = self.head2(x3)
             pred4 = self.head2(x4)

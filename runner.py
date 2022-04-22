@@ -7,7 +7,7 @@ from tqdm import tqdm
 import utils
 import torch
 import torch.nn as nn
-from scipy.stats import spearmanr, pearsonr
+from scipy.stats import spearmanr, pearsonr, kendalltau
 import numpy as np
 import os
 import loss
@@ -58,7 +58,7 @@ class UIE_Runner():
                 f"SSIM: {ssim} (max: {np.max(np.array(ssim_list))})\t"
             )
             if np.max(np.array(psnr_list)) == psnr or np.max(np.array(ssim_list)) == ssim:
-                self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> PSNR: {psnr}, SSIM: {ssim}")
+                self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> PSNR: {psnr}, SSIM: {ssim}\n")
                 if epoch > 80:
                     self.save(epoch, psnr, ssim)
             print()
@@ -169,6 +169,153 @@ class UIE_Runner():
             loss_total = loss_total + self.training_opt['loss_coff'][2] * loss.ranker_loss(ranker_model, pred)
 
         return loss_total
+
+class Ranker_Runner():
+    def __init__(self, opt_path, type='train'):
+        options = utils.get_option(opt_path)
+
+        self.type = type
+        self.dataset_opt = options['dataset']
+        self.model_opt = options['model']
+        self.training_opt = options['train']
+        self.experiments_opt = options['experiments']
+        self.test_opt = options['test']
+
+        self.model = utils.build_model(self.model_opt)
+
+        self.train_dataloader = utils.build_dataloader(self.dataset_opt, type='train')
+        self.test_dataloader = utils.build_dataloader(self.dataset_opt, type='test')
+        
+        self.optimizer = utils.build_optimizer(self.training_opt, self.model)
+        self.lr_scheduler = utils.build_lr_scheduler(self.training_opt, self.optimizer)
+        
+        self.tb_writer = SummaryWriter(os.path.join(self.experiments_opt['save_root'], 'tensorboard'))
+        self.logger = utils.build_logger(self.experiments_opt)
+
+    def main_loop(self):
+        srocc_list = []
+        krocc_list = []
+        print(self.model)
+        for epoch in range(self.training_opt['epoch']):
+            print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))
+            loss = self.train_loop(epoch)
+            torch.cuda.empty_cache()
+            srocc, krocc = self.test_loop(epoch_num=epoch)
+
+            srocc_list.append(srocc)
+            krocc_list.append(krocc)
+
+            self.logger.info(
+                f"Epoch: {epoch}/{self.training_opt['epoch']}\t"
+                f"Loss: {loss}\t"
+                f"SROCC: {srocc} (max: {np.max(np.array(srocc_list))})\t"
+                f"KROCC: {krocc} (max: {np.max(np.array(krocc_list))})\t"
+            )
+            if np.max(np.array(srocc_list)) == srocc or np.max(np.array(krocc_list)) == krocc:
+                self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> SROCC: {srocc}, KROCC: {krocc}\n")
+                if epoch > 80:
+                    self.save(epoch, srocc, krocc)
+            print()
+
+    def main_test_loop(self):
+        if self.test_opt['start_epoch'] >=0 and self.test_opt['end_epoch'] >=0:
+            for i in range(self.test_opt['start_epoch'], self.test_opt['end_epoch']):
+                checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], f'checkpoint_{i}.pth')
+                self.test_loop(checkpoint_name, i)
+        else:
+            checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], self.test_opt['test_ckpt_path'])
+            self.test_loop(checkpoint_name)
+        
+    def train_loop(self, epoch_num):
+        loss_meter = AverageMeter()
+        with tqdm(total=len(self.train_dataloader)) as t_bar:
+            for iter_num, data in enumerate(self.train_dataloader):
+                # put data to cuda device
+                if self.model_opt['cuda']:
+                    data = {key:value.cuda() for key, value in data.items()}
+                
+                # pre-processing
+                pre_input_high = utils.preprocessing(data['high_img'])
+                pre_input_low = utils.preprocessing(data['low_img'])
+                
+                # model prediction
+                pred_high = self.model(**pre_input_high)
+                pred_low = self.model(**pre_input_low)
+                
+                # # loss and bp
+                loss = self.build_loss(pred_high, pred_low)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+                if self.lr_scheduler:
+                    self.lr_scheduler.step()
+                
+                # # print log
+                # self.print()
+                loss_meter.update(loss)
+                t_bar.set_description('Epoch:%d/%d, loss:%.6f' % (epoch_num, self.training_opt['epoch'], loss_meter.avg))
+                t_bar.update(1)
+        
+        self.tb_writer.add_scalar('loss/ranker_loss', loss_meter.avg, epoch_num + 1)
+        return loss_meter.avg  
+            
+    def test_loop(self, checkpoint_path=None, epoch_num=None):
+        if checkpoint_path == None and epoch_num == None:
+            raise NotImplementedError('checkpoint_name and epoch_num can not both be NoneType!')
+
+        with torch.no_grad():
+            srocc_meter = AverageMeter()
+            krocc_meter = AverageMeter()
+            if checkpoint_path:
+                ckpt_dict = torch.load(checkpoint_path)['net']
+                self.model.load_state_dict(ckpt_dict)
+
+            preds = np.zeros(10)
+            with tqdm(total=len(self.test_dataloader) // 10) as t_bar:
+                score = np.linspace(1, 10, num=10)[::-1]
+                for iter_num, data in enumerate(self.test_dataloader):
+                    img = data['img'].cuda()
+                    pre_input = utils.preprocessing(img)
+                    pred = self.model(**pre_input)['final_result'][0][0][0]
+                    preds[iter_num % 10] = pred.cpu().detach().numpy()
+                    torch.cuda.empty_cache()
+                    # calculate score
+                    if iter_num % 10 == 0 and iter_num != 0:
+                        step_num = iter_num // 10
+                        srocc, _ = spearmanr(preds, score)
+                        krocc, _ = kendalltau(preds, score)
+
+                        # update score
+                        srocc_meter.update(srocc)
+                        krocc_meter.update(krocc)
+
+                        # update bar
+                        t_bar.set_description('Epoch:%d/%d, SROCC:%.6f, KROCC:%.6f' % (epoch_num, self.training_opt['epoch'], srocc_meter.avg, krocc_meter.avg))
+                        t_bar.update(1)
+        if epoch_num >= 0:
+            self.tb_writer.add_scalar('valid/srocc', srocc_meter.avg, epoch_num + 1)
+            self.tb_writer.add_scalar('valid/krocc', krocc_meter.avg, epoch_num + 1)
+
+        return srocc_meter.avg, krocc_meter.avg
+            
+    
+    def save(self, epoch_num, psnr, ssim):
+        # path for saving
+        path = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'])
+        utils.make_dir(path)
+            
+        checkpoint = {
+        "net": self.model.state_dict(),
+        'optimizer':self.optimizer.state_dict(),
+        "epoch": epoch_num
+        }
+        torch.save(checkpoint, os.path.join(path, f'checkpoint_{epoch_num}_psnr{psnr}_ssim{ssim}.pth'))
+    
+    def build_loss(self, result1, result2):
+        L_final = loss.rank_loss(result1['final_result'], result2['final_result'])
+        L_rank = L_final
+        
+        return L_rank
 
 class AverageMeter:
     """Computes and stores the average and current value"""

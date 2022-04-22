@@ -1,0 +1,44 @@
+# setting for training UColor with Ranker loss
+
+dataset:
+    dataset_name : Dataset_Ranker
+    root : ../dataset/UIERank
+    bs : 1
+    num_workers : 1
+    train_list_path : dataset/ranker_train_list.txt
+    test_list_path : dataset/ranker_test_list.txt
+
+model:
+    model_name: MyCoaT
+    resume_ckpt_path:
+    cuda: true
+    parallel: false
+    patch_size: 4
+    embed_dims: [152, 320, 320, 320]
+    serial_depths: [2, 2, 2, 2]
+    parallel_depth: 6
+    num_heads: 8
+    mlp_ratios: [4, 4, 4, 4]
+    add_historgram: false
+    his_channel: 
+
+train:
+    # basic hyper parameters setting
+    start_epoch: 0
+    epoch: 1000
+    lr: 1.0e-5
+    optimizer: Adam
+    lr_schedule: 
+    lr_schedule_arg: 
+    
+experiments:
+    save_root: ranker_output/MyCoaT/without_historgram
+    log: logs
+    checkpoints: checkpoints
+    results: results
+
+test:
+    start_epoch: 0
+    end_epoch: 1
+    test_ckpt_path:
+    save_img: false
