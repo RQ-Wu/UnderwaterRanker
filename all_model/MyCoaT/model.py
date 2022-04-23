@@ -221,9 +221,11 @@ class ParallelBlock(nn.Module):
     """ Parallel block class. """
     def __init__(self, dims, num_heads, mlp_ratios=[], qkv_bias=False, qk_scale=None, drop=0., attn_drop=0.,
                  drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm,
-                 shared_cpes=None, shared_crpes=None):
+                 shared_cpes=None, shared_crpes=None, connect_type = 'neighbor'):
         super().__init__()
+        print(connect_type)
 
+        self.connect_type = connect_type
         # Conv-Attention.
         self.cpes = shared_cpes
 
@@ -295,13 +297,24 @@ class ParallelBlock(nn.Module):
         cur4 = self.factoratt_crpe4(cur4, size=(H4,W4))
         upsample3_2 = self.upsample(cur3, output_size=(H2,W2), size=(H3,W3))
         upsample4_3 = self.upsample(cur4, output_size=(H3,W3), size=(H4,W4))
-        # upsample4_2 = self.upsample(cur4, output_size=(H2,W2), size=(H4,W4))
+        upsample4_2 = self.upsample(cur4, output_size=(H2,W2), size=(H4,W4))
         downsample2_3 = self.downsample(cur2, output_size=(H3,W3), size=(H2,W2))
         downsample3_4 = self.downsample(cur3, output_size=(H4,W4), size=(H3,W3))
-        # downsample2_4 = self.downsample(cur2, output_size=(H4,W4), size=(H2,W2))
-        cur2 = cur2  + upsample3_2
-        cur3 = cur3  + upsample4_3   + downsample2_3
-        cur4 = cur4  + downsample3_4
+        downsample2_4 = self.downsample(cur2, output_size=(H4,W4), size=(H2,W2))
+
+        if self.connect_type == 'neighbor':
+            cur2 = cur2  + upsample3_2
+            cur3 = cur3  + upsample4_3   + downsample2_3
+            cur4 = cur4  + downsample3_4
+        elif self.connect_type == 'dense':
+            cur2 = cur2  + upsample3_2   + upsample4_2
+            cur3 = cur3  + upsample4_3   + downsample2_3
+            cur4 = cur4  + downsample3_4 + downsample2_4
+        elif self.connect_type == 'direct':
+            cur2 = cur2
+            cur3 = cur3
+            cur4 = cur4
+
         x2 = x2 + self.drop_path(cur2) 
         x3 = x3 + self.drop_path(cur3) 
         x4 = x4 + self.drop_path(cur4) 
@@ -347,12 +360,13 @@ class MyCoaT(nn.Module):
                  num_heads=0, mlp_ratios=[0, 0, 0, 0], qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=partial(nn.LayerNorm, eps=1e-6),
                  return_interm_layers=False, out_features=None, crpe_window={3:2, 5:3, 7:3},
-                 add_historgram=False, his_channel=192, **kwargs):
+                 add_historgram=False, his_channel=192, connect_type='neighbor', **kwargs):
         super().__init__()
         self.return_interm_layers = return_interm_layers
         self.out_features = out_features
         self.num_classes = num_classes
         self.add_historgram = add_historgram
+        self.connect_type = connect_type
 
         if self.add_historgram:
             # Historgram embeddings.
@@ -436,7 +450,8 @@ class MyCoaT(nn.Module):
                     dims=embed_dims, num_heads=num_heads, mlp_ratios=mlp_ratios, qkv_bias=qkv_bias, qk_scale=qk_scale,
                     drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr, norm_layer=norm_layer, 
                     shared_cpes=[self.cpe1, self.cpe2, self.cpe3, self.cpe4],
-                    shared_crpes=[self.crpe1, self.crpe2, self.crpe3, self.crpe4]
+                    shared_crpes=[self.crpe1, self.crpe2, self.crpe3, self.crpe4],
+                    connect_type = self.connect_type
                 )
                 for _ in range(parallel_depth)]
             )

@@ -195,7 +195,7 @@ class Ranker_Runner():
     def main_loop(self):
         srocc_list = []
         krocc_list = []
-        print(self.model)
+
         for epoch in range(self.training_opt['epoch']):
             print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))
             loss = self.train_loop(epoch)
@@ -299,7 +299,7 @@ class Ranker_Runner():
             
     
     def save(self, epoch_num):
-        best_range = (epoch_num // 50 + 1) * 5
+        best_range = (epoch_num // 50 + 1) * 50
         # path for saving
         path = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'])
         utils.make_dir(path)
