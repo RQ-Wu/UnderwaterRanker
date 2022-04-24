@@ -10,7 +10,7 @@ dataset:
 
 model:
     model_name: MyCoaT
-    resume_ckpt_path:
+    resume_ckpt_path: ranker_output/MyCoaT/dense_connect/checkpoints/checkpoint_100best.pth
     cuda: true
     parallel: false
     patch_size: 4
