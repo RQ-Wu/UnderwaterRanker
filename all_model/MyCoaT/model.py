@@ -226,6 +226,13 @@ class ParallelBlock(nn.Module):
         print(connect_type)
 
         self.connect_type = connect_type
+        if self.connect_type == 'dynamic':
+            self.alpha1 = nn.Parameter(torch.zeros(1) + 0.05)
+            self.alpha2 = nn.Parameter(torch.zeros(1) + 0.05)
+            self.alpha3 = nn.Parameter(torch.zeros(1) + 0.05)
+            self.alpha4 = nn.Parameter(torch.zeros(1) + 0.05)
+            self.alpha5 = nn.Parameter(torch.zeros(1) + 0.05)
+            self.alpha6 = nn.Parameter(torch.zeros(1) + 0.05)
         # Conv-Attention.
         self.cpes = shared_cpes
 
@@ -314,6 +321,12 @@ class ParallelBlock(nn.Module):
             cur2 = cur2
             cur3 = cur3
             cur4 = cur4
+        elif self.connect_type == 'dynamic':
+            cur2 = cur2  + self.alpha1 * upsample3_2   + self.alpha2 * upsample4_2
+            cur3 = cur3  + self.alpha3 * upsample4_3   + self.alpha4 * downsample2_3
+            cur4 = cur4  + self.alpha5 * downsample3_4 + self.alpha6 * downsample2_4  
+        
+        del upsample3_2, upsample4_3, upsample4_2, downsample2_3, downsample2_4, downsample3_4
 
         x2 = x2 + self.drop_path(cur2) 
         x3 = x3 + self.drop_path(cur3) 

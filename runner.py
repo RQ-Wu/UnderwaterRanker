@@ -195,11 +195,12 @@ class Ranker_Runner():
     def main_loop(self):
         srocc_list = []
         krocc_list = []
+        start_epoch = 0
 
         if self.model_opt['resume_ckpt_path']:
             ckpt = torch.load(self.model_opt['resume_ckpt_path'])
             self.optimizer.load_state_dict(ckpt['optimizer'])
-            start_epoch = ckpt['epoch']
+            start_epoch = ckpt['epoch'] + 1
         for epoch in range(start_epoch, self.training_opt['epoch']):
             print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))
             loss = self.train_loop(epoch)
