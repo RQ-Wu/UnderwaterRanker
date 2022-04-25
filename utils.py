@@ -12,7 +12,7 @@ import logging
 
 def get_option(opt_path):
     with open(opt_path, 'r') as f:
-        option = yaml.load(f)
+        option = yaml.safe_load(f)
     return option
 
 def build_optimizer(opt, model):
