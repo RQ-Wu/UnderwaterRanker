@@ -2,7 +2,6 @@ from asyncio.log import logger
 from pickletools import read_uint2
 from tabnanny import check
 from unittest import result
-from click import option
 from tqdm import tqdm
 import utils
 import torch
