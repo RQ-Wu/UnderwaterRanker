@@ -21,7 +21,7 @@ model:
     mlp_ratios: [4, 4, 4, 4]
     add_historgram: false
     his_channel: 192
-    connect_type: dynamic
+    connect_type: direct
 
 train:
     # basic hyper parameters setting
@@ -42,4 +42,4 @@ test:
     start_epoch: 0
     end_epoch: 1
     test_ckpt_path:
-    save_img: false
+    save_img: false 

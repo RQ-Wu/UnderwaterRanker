@@ -20,7 +20,7 @@ model:
     num_heads: 8
     mlp_ratios: [4, 4, 4, 4]
     add_historgram: false
-    his_channel: 
+    connect_type: neighbor
 
 train:
     # basic hyper parameters setting
@@ -32,7 +32,7 @@ train:
     lr_schedule_arg: 
     
 experiments:
-    save_root: ranker_output/MyCoaT/without_historgram
+    save_root: ranker_output/MyCoaT_new/without_historgram
     log: logs
     checkpoints: checkpoints
     results: results

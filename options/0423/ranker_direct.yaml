@@ -33,7 +33,7 @@ train:
     lr_schedule_arg: 
     
 experiments:
-    save_root: ranker_output/MyCoaT/no_connect
+    save_root: ranker_output/MyCoaT_new/no_connect
     log: logs
     checkpoints: checkpoints
     results: results

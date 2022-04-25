@@ -10,7 +10,7 @@ dataset:
 
 model:
     model_name: MyCoaT
-    resume_ckpt_path: ranker_output/MyCoaT/dense_connect/checkpoints/checkpoint_100best.pth
+    resume_ckpt_path:
     cuda: true
     parallel: false
     patch_size: 4
@@ -33,7 +33,7 @@ train:
     lr_schedule_arg: 
     
 experiments:
-    save_root: ranker_output/MyCoaT/dense_connect
+    save_root: ranker_output/MyCoaT_new/dense_connect
     log: logs
     checkpoints: checkpoints
     results: results

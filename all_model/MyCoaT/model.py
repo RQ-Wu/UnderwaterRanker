@@ -332,6 +332,8 @@ class ParallelBlock(nn.Module):
         x3 = x3 + self.drop_path(cur3) 
         x4 = x4 + self.drop_path(cur4) 
 
+        del cur2, cur3, cur4
+
         # MLP. 
         cur2 = self.norm22(x2)
         cur3 = self.norm23(x3)
@@ -631,8 +633,8 @@ class MyCoaT(nn.Module):
         else:                               # Return features for classification.
             x2, x3, x4 = self.forward_features(x, x_his) 
             pred2 = self.head2(x2)
-            pred3 = self.head2(x3)
-            pred4 = self.head2(x4)
+            pred3 = self.head3(x3)
+            pred4 = self.head4(x4)
             
             x = (pred2 + pred3 + pred4) / 3.0
             
