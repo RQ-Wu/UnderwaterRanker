@@ -4,7 +4,7 @@ dataset:
     dataset_name : Dataset_Ranker
     root : ../dataset/UIERank
     bs : 1
-    num_workers : 1
+    num_workers : 4
     train_list_path : dataset/ranker_train_list.txt
     test_list_path : dataset/ranker_test_list.txt
 
