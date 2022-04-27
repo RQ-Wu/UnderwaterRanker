@@ -14,7 +14,7 @@ import skimage.io as io
 from datetime import datetime
 import time
 import matplotlib.pyplot as plt
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 class UIE_Runner():
     def __init__(self, opt_path, type='train'):

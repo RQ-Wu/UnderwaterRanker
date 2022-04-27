@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from timm.models.layers import to_2tuple
 
-from eniops import rearrange
+from einops import rearrange
 from functools import partial
 class PatchEmbed(nn.Module):
     """ Image to Patch Embedding """
