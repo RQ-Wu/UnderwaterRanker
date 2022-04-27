@@ -119,19 +119,10 @@ def calc_ssim(pred, gt, is_for_torch=True):
 
 def normalize_img(img):
     if torch.max(img) > 1 or torch.min(img) < 0:
-        # img: b x c x h x w
-        b, c, h, w = img.shape
-        temp_img = img.view(b, c, h*w)
-        im_max = torch.max(temp_img, dim=2)[0].view(b, c, 1)
-        im_min = torch.min(temp_img, dim=2)[0].view(b, c, 1)
-        # im_min[im_min > 0] = 0.0
-        # im_max[im_max < 1] = 1.0
+        im_max = torch.max(img)
+        im_min = torch.min(img)
 
-        temp_img = (temp_img - im_min) / (im_max - im_min + 1e-7)
-        
-        img = temp_img.view(b, c, h, w)
-    # img[img > 1] = 1.0
-    # img[img < 0] = 0.0
+        img = (img - im_min) / (im_max - im_min + 1e-7)
     
     return img
 
@@ -146,7 +137,7 @@ def preprocessing(d_img_org):
         # d_img_scale_1 = nn.Upsample(size=(int(h*alpha_1), int(w*alpha_1)))(d_img_org)
         # d_img_scale_2 = nn.Upsample(size=(int(h*alpha_2), int(w*alpha_2)))(d_img_org)
         
-        d_img_org = padding_img(d_img_org)
+        # d_img_org = padding_img(d_img_org)
         # d_img_scale_1 = padding_img(d_img_scale_1)
         # d_img_scale_2 = padding_img(d_img_scale_2)
         
@@ -162,10 +153,9 @@ def preprocessing(d_img_org):
         #     'd_img_scale_1': d_img_scale_1,
         #     'd_img_scale_2': d_img_scale_2
         # }
-        x_his = build_historgram(d_img_org)
+        # x_his = build_historgram(d_img_org)
         return {
-            'x': d_img_org,
-            'x_his': x_his
+            'x': d_img_org
         }
         
 def padding_img(img):

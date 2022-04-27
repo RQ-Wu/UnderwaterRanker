@@ -1,6 +1,7 @@
 # MacOS
 .DS_Store
-
+*output/
+create_npy.py
 # envs
 /envs
 

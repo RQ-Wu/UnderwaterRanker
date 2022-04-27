@@ -5,7 +5,7 @@ from torch.utils import data
 from torchvision import transforms
 from torchvision.transforms import InterpolationMode
 import torchvision.transforms.functional as transFunc
-
+import torchvision.transforms.functional as F
 
 import os
 import yaml
@@ -14,6 +14,56 @@ from PIL import Image
 from random import Random
 import matplotlib.pyplot as plt
 from utils import build_historgram
+
+class Dataset(data.Dataset):
+    def __init__(self, opt, type="train"):
+        self.raw_path = opt['root'] + 'raw-890/'
+        self.gt_path = opt['root'] + 'reference-890/reference-890/'
+        self.crop_size = opt['crop_size']
+        self.type = type
+        if self.type == "train":
+            f = open(opt['train_list_path'])
+        elif self.type == "test" or self.type == 'valid':
+            f = open(opt['test_list_path'])
+        self.filenames = f.readlines()
+
+    def __getitem__(self, item):
+        raw_item_path = self.raw_path + self.filenames[item].rstrip()
+        gt_item_path = self.gt_path + self.filenames[item].rstrip()
+
+        raw_img = Image.open(raw_item_path)
+        gt_img = Image.open(gt_item_path)
+        img_w = raw_img.size[0]
+        img_h = raw_img.size[1]
+
+        if self.type == "train":
+            # random resize and crop to 256 x 256
+            i, j, h, w = transforms.RandomResizedCrop(self.crop_size).get_params(raw_img, (0.08, 1.0),
+                                                                                  (3. / 4., 4. / 3.))
+            raw_cropped = F.resized_crop(raw_img, i, j, h, w, (self.crop_size, self.crop_size), InterpolationMode.BICUBIC)
+            gt_cropped = F.resized_crop(gt_img, i, j, h, w, (self.crop_size, self.crop_size), InterpolationMode.BICUBIC)
+            raw_cropped = transforms.ToTensor()(raw_cropped)
+            gt_cropped = transforms.ToTensor()(gt_cropped)
+            
+
+            if np.random.rand(1) < 0.5:  # flip horizonly
+                raw_cropped = torch.flip(raw_cropped, [2])
+                gt_cropped = torch.flip(gt_cropped, [2])
+            if np.random.rand(1):  # flip vertically
+                raw_cropped = torch.flip(raw_cropped, [1])
+                gt_cropped = torch.flip(gt_cropped, [1])
+
+            return {'raw_img':raw_cropped, 'gt_img':gt_cropped}
+        
+        elif self.type == "test":
+            raw_img = transforms.Resize((img_h // 16 * 16, img_w // 16 * 16))(raw_img)
+            raw_img = transforms.ToTensor()(raw_img)
+            gt_img = transforms.ToTensor()(gt_img)
+
+            return {'raw_img':raw_img, 'gt_img':gt_img, 'filename': self.filenames[item].rstrip()}
+            
+    def __len__(self):
+        return len(self.filenames)
 
 class Dataset_Ucolor(data.Dataset):
     def __init__(self, opt, type="train", **kwargs):
