@@ -116,8 +116,12 @@ class UIE_Runner():
 
             with tqdm(total=len(self.test_dataloader)) as t_bar:
                 for iter_num, [data, filename] in enumerate(self.test_dataloader):
+                    _, _, h, w = data['gt_img'].shape
                     gt_img = data['gt_img'][0].permute(1, 2, 0).detach().numpy()
-                    pred_img = utils.normalize_img(self.model(**data))[0].permute(1, 2, 0).detach().cpu().numpy()
+
+                    upsample = nn.UpsamplingBilinear2d((h, w))
+                    pred_img = upsample(self.model(**data))
+                    pred_img = utils.normalize_img(pred_img)[0].permute(1, 2, 0).detach().cpu().numpy()
                     # pred_img = io.imread(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0])) / 255.0
 
                     psnr = utils.calc_psnr(pred_img, gt_img, is_for_torch=False)

@@ -110,10 +110,10 @@ class SimpleNet(nn.Module):
         self.encoder = Encoder(basic_channel)
         self.decoder = Decoder(basic_channel)
         
-    def forward(self, x):
+    def forward(self, raw_img, **kwargs):
         # encoder-decoder part
-        x1, x2, x3, x4 = self.encoder(x)
-        y = normalize_img(self.decoder(x, x1, x2, x3, x4))
+        x1, x2, x3, x4 = self.encoder(raw_img)
+        y = normalize_img(self.decoder(raw_img, x1, x2, x3, x4))
         
         return y
 
