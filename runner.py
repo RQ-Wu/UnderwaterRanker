@@ -16,7 +16,6 @@ import time
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 
-# test
 class UIE_Runner():
     def __init__(self, opt_path, type='train'):
         options = utils.get_option(opt_path)
