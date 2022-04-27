@@ -1,5 +1,6 @@
 from asyncio.log import logger
 from pickletools import read_uint2
+import plistlib
 from tabnanny import check
 from unittest import result
 from tqdm import tqdm
@@ -41,7 +42,15 @@ class UIE_Runner():
     def main_loop(self):
         psnr_list = []
         ssim_list = []
-        for epoch in range(self.training_opt['epoch']):
+        start_epoch = 0
+        if self.model_opt['resume_ckpt_path']:
+            ckpt = torch.load(self.model_opt['resume_ckpt_path'])
+            self.optimizer.load_state_dict(ckpt['optimizer'])
+            psnr_list.append(ckpt['max_psnr'])
+            ssim_list.append(ckpt['max_ssim'])
+            start_epoch = ckpt['epoch'] + 1
+
+        for epoch in range(start_epoch, self.training_opt['epoch']):
             print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))
             loss = self.train_loop(epoch)
             torch.cuda.empty_cache()
@@ -58,8 +67,7 @@ class UIE_Runner():
             )
             if np.max(np.array(psnr_list)) == psnr or np.max(np.array(ssim_list)) == ssim:
                 self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> PSNR: {psnr}, SSIM: {ssim}\n")
-                if epoch > 80:
-                    self.save(epoch, psnr, ssim)
+                self.save(epoch, psnr, ssim)
             print()
 
     def main_test_loop(self):
@@ -100,7 +108,8 @@ class UIE_Runner():
 
         
         self.tb_writer.add_scalar('train/loss', total_loss, epoch_num + 1)
-        ranker_model=ranker_model.cpu()
+        if self.training_opt['loss_rank']:
+            ranker_model=ranker_model.cpu()
         return total_loss
             
     def test_loop(self, checkpoint_path=None, epoch_num=None):
@@ -115,13 +124,13 @@ class UIE_Runner():
                 self.model.load_state_dict(ckpt_dict)
 
             with tqdm(total=len(self.test_dataloader)) as t_bar:
-                for iter_num, [data, filename] in enumerate(self.test_dataloader):
+                for iter_num, data in enumerate(self.test_dataloader):
                     _, _, h, w = data['gt_img'].shape
                     gt_img = data['gt_img'][0].permute(1, 2, 0).detach().numpy()
 
                     upsample = nn.UpsamplingBilinear2d((h, w))
-                    pred_img = upsample(self.model(**data))
-                    pred_img = utils.normalize_img(pred_img)[0].permute(1, 2, 0).detach().cpu().numpy()
+                    pred_img = upsample(self.model(data['raw_img'].cuda()))
+                    pred_img = pred_img[0].permute(1, 2, 0).detach().cpu().numpy()
                     # pred_img = io.imread(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0])) / 255.0
 
                     psnr = utils.calc_psnr(pred_img, gt_img, is_for_torch=False)
@@ -155,14 +164,16 @@ class UIE_Runner():
         checkpoint = {
         "net": self.model.state_dict(),
         'optimizer':self.optimizer.state_dict(),
-        "epoch": epoch_num
+        "epoch": epoch_num,
+        "max_psnr": psnr,
+        "max_ssim": ssim
         }
-        torch.save(checkpoint, os.path.join(path, f'checkpoint_{epoch_num}_psnr{psnr}_ssim{ssim}.pth'))
+        torch.save(checkpoint, os.path.join(path, f'checkpoint_{epoch_num}.pth'))
     
     def build_loss(self, pred, gt, ranker_model):
         loss_total = 0
-        Loss_L2 = nn.MSELoss().cuda()
-        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L2(pred, gt)
+        Loss_L1 = nn.L1Loss().cuda()
+        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L1(pred, gt)
 
         if self.training_opt['loss_vgg']:
             Loss_VGG = loss.perception_loss().cuda()

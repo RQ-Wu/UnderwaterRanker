@@ -27,7 +27,7 @@ train:
 
     # loss setting
     loss_vgg: false
-    loss_rank: true
+    loss_rank: false
     loss_coff: [1, 0.0, 0.025]
 
     ranker_args:
@@ -46,7 +46,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/SimpleNet/with_ranker_0.025
+    save_root: uie_output/SimpleNet/without_ranker
     log: logs
     checkpoints: checkpoints
     results: results

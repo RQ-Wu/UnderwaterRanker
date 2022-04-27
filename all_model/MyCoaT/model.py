@@ -223,7 +223,6 @@ class ParallelBlock(nn.Module):
                  drop_path=0., act_layer=nn.GELU, norm_layer=nn.LayerNorm,
                  shared_cpes=None, shared_crpes=None, connect_type = 'neighbor'):
         super().__init__()
-        print(connect_type)
 
         self.connect_type = connect_type
         if self.connect_type == 'dynamic':

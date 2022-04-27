@@ -2,6 +2,7 @@ import torch.nn as nn
 from torchvision.models.vgg import vgg16
 import torch
 import torch.nn.functional as F
+import utils
 
 def rank_loss(x1, x2):
     rank_loss = nn.MarginRankingLoss(margin=0.5).cuda()
@@ -13,7 +14,8 @@ def rank_loss(x1, x2):
 
 def ranker_loss(model, img):
     # with torch.no_grad():
-    score = model(img)['final_result']
+    pre_input = utils.preprocessing(img)
+    score = model(**pre_input)['final_result']
     loss = torch.mean(F.sigmoid(-score))
 
     return loss

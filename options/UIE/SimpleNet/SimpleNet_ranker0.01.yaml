@@ -28,7 +28,7 @@ train:
     # loss setting
     loss_vgg: false
     loss_rank: true
-    loss_coff: [1, 0.0, 0.025]
+    loss_coff: [1, 0.0, 0.01]
 
     ranker_args:
         model_name: MyCoaT
@@ -46,7 +46,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/SimpleNet/with_ranker_0.025
+    save_root: uie_output/SimpleNet/with_ranker_0.01
     log: logs
     checkpoints: checkpoints
     results: results

@@ -15,7 +15,8 @@ from random import Random
 import matplotlib.pyplot as plt
 from utils import build_historgram
 
-class Dataset(data.Dataset):
+myrandom = Random(567)
+class Dataset_UIEB(data.Dataset):
     def __init__(self, opt, type="train"):
         self.raw_path = opt['root'] + 'raw-890/'
         self.gt_path = opt['root'] + 'reference-890/reference-890/'
@@ -49,7 +50,7 @@ class Dataset(data.Dataset):
             if np.random.rand(1) < 0.5:  # flip horizonly
                 raw_cropped = torch.flip(raw_cropped, [2])
                 gt_cropped = torch.flip(gt_cropped, [2])
-            if np.random.rand(1):  # flip vertically
+            if np.random.rand(1) < 0.5:  # flip vertically
                 raw_cropped = torch.flip(raw_cropped, [1])
                 gt_cropped = torch.flip(gt_cropped, [1])
 
@@ -60,7 +61,7 @@ class Dataset(data.Dataset):
             raw_img = transforms.ToTensor()(raw_img)
             gt_img = transforms.ToTensor()(gt_img)
 
-            return {'raw_img':raw_img, 'gt_img':gt_img, 'filename': self.filenames[item].rstrip()}
+            return {'raw_img':raw_img, 'gt_img':gt_img}
             
     def __len__(self):
         return len(self.filenames)

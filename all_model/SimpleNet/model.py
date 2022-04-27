@@ -21,7 +21,7 @@ class BasicBlock(nn.Module):
         self.out = nn.Sequential(
             nn.Conv2d(in_channel, out_channel, 3, 1, 1),
             nn.InstanceNorm2d(out_channel),
-            nn.GELU()
+            nn.ELU()
         )
 
     def forward(self, x):

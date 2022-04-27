@@ -26,14 +26,16 @@ def build_optimizer(opt, model):
     return optimizer
 
 def build_lr_scheduler(opt, optimizer):
-    lr_scheduler_name = opt['lr_schedule']
+    lr_scheduler_name = opt['lr_scheduler']
     if lr_scheduler_name:
         try:
             lr_scheduler_class = getattr(getattr(torch.optim, 'lr_scheduler'), lr_scheduler_name)
-            lr_scheduler = lr_scheduler_class(optimizer, **opt['lr_s_args'])
         except:
             raise NotImplementedError('Unable to load lr_scheduler: \'%s\', please check if there are any spelling errors ' % lr_scheduler_name)
-        
+        try:
+            lr_scheduler = lr_scheduler_class(optimizer, **opt['lr_scheduler_arg'])
+        except:
+             raise NotImplementedError('Failed to load optimizer')
         return lr_scheduler
     else:
         return None
@@ -126,36 +128,12 @@ def normalize_img(img):
     
     return img
 
-def preprocessing(d_img_org):
-        # is_cuda = d_img_org.is_cuda
-        # scale_1 = 384
-        # scale_2 = 224
-        # b, c, h, w = d_img_org.shape
-
-        # alpha_1 = scale_1 / np.max(np.asarray([h, w]))
-        # alpha_2 = scale_2 / np.max(np.asarray([h, w]))
-        # d_img_scale_1 = nn.Upsample(size=(int(h*alpha_1), int(w*alpha_1)))(d_img_org)
-        # d_img_scale_2 = nn.Upsample(size=(int(h*alpha_2), int(w*alpha_2)))(d_img_org)
-        
-        # d_img_org = padding_img(d_img_org)
-        # d_img_scale_1 = padding_img(d_img_scale_1)
-        # d_img_scale_2 = padding_img(d_img_scale_2)
-        
-        # n_enc_seq = 1 + (math.ceil(h / 32)) * math.ceil(w / 32) + (d_img_scale_1.shape[2] // 32) * (d_img_scale_1.shape[3] // 32) + (d_img_scale_2.shape[2] // 32) * (d_img_scale_2.shape[3] // 32)
-        # mask_inputs = torch.ones(b, n_enc_seq)
-        
-        # if is_cuda:
-        #     mask_inputs = mask_inputs.cuda()
-            
-        # return {
-        #     'mask_inputs': mask_inputs,
-        #     'd_img_org': d_img_org,
-        #     'd_img_scale_1': d_img_scale_1,
-        #     'd_img_scale_2': d_img_scale_2
-        # }
-        # x_his = build_historgram(d_img_org)
+def preprocessing(d_img_org):     
+        d_img_org = padding_img(d_img_org)
+        x_his = build_historgram(d_img_org)
         return {
-            'x': d_img_org
+            'x': d_img_org,
+            'x_his': x_his
         }
         
 def padding_img(img):
@@ -173,11 +151,21 @@ def padding_img(img):
     return img
 
 def build_historgram(img):
-    r_his = torch.histc(img[0][0], 64, min=0.0, max=1.0)
-    g_his = torch.histc(img[0][1], 64, min=0.0, max=1.0)
-    b_his = torch.histc(img[0][2], 64, min=0.0, max=1.0)
+    with torch.no_grad():
+        b, _, _, _ = img.shape
 
-    historgram = torch.cat((r_his, g_his, b_his)).unsqueeze(0).unsqueeze(0
-    )
+        r_his = torch.histc(img[0][0], 64, min=0.0, max=1.0)
+        g_his = torch.histc(img[0][1], 64, min=0.0, max=1.0)
+        b_his = torch.histc(img[0][2], 64, min=0.0, max=1.0)
+
+        historgram = torch.cat((r_his, g_his, b_his)).unsqueeze(0).unsqueeze(0)
+
+        for i in range(1, b):
+            r_his = torch.histc(img[i][0], 64, min=0.0, max=1.0)
+            g_his = torch.histc(img[i][1], 64, min=0.0, max=1.0)
+            b_his = torch.histc(img[i][2], 64, min=0.0, max=1.0)
+
+            historgram_temp = torch.cat((r_his, g_his, b_his)).unsqueeze(0).unsqueeze(0)
+            historgram = torch.cat((historgram, historgram_temp), dim=0)
 
     return historgram
