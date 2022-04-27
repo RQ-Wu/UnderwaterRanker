@@ -279,7 +279,7 @@ class Ranker_Runner():
                 for iter_num, data in enumerate(self.test_dataloader):
                     img = data['img'].cuda()
                     pre_input = utils.preprocessing(img)
-                    pred = self.model(**pre_input)['final_result'][0][0][0]
+                    pred = self.model(**pre_input)['final_result'][0][0]
                     preds[iter_num % 10] = pred.cpu().detach().numpy()
                     torch.cuda.empty_cache()
                     # calculate score

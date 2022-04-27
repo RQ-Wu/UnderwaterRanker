@@ -146,7 +146,7 @@ def preprocessing(d_img_org):
         # d_img_scale_1 = nn.Upsample(size=(int(h*alpha_1), int(w*alpha_1)))(d_img_org)
         # d_img_scale_2 = nn.Upsample(size=(int(h*alpha_2), int(w*alpha_2)))(d_img_org)
         
-        d_img_org = padding_img(d_img_org)
+        # d_img_org = padding_img(d_img_org)
         # d_img_scale_1 = padding_img(d_img_scale_1)
         # d_img_scale_2 = padding_img(d_img_scale_2)
         
@@ -162,10 +162,9 @@ def preprocessing(d_img_org):
         #     'd_img_scale_1': d_img_scale_1,
         #     'd_img_scale_2': d_img_scale_2
         # }
-        x_his = build_historgram(d_img_org)
+        # x_his = build_historgram(d_img_org)
         return {
-            'x': d_img_org,
-            'x_his': x_his
+            'x': d_img_org
         }
         
 def padding_img(img):
