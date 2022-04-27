@@ -8,14 +8,10 @@ def normalize_img(img):
         temp_img = img.view(b, c, h*w)
         im_max = torch.max(temp_img, dim=2)[0].view(b, c, 1)
         im_min = torch.min(temp_img, dim=2)[0].view(b, c, 1)
-        # im_min[im_min > 0] = 0.0
-        # im_max[im_max < 1] = 1.0
 
         temp_img = (temp_img - im_min) / (im_max - im_min + 1e-7)
         
         img = temp_img.view(b, c, h, w)
-    # img[img > 1] = 1.0
-    # img[img < 0] = 0.0
     
     return img
 
@@ -108,12 +104,11 @@ class Decoder(nn.Module):
         
         return y + x
 
-class UIE_Net(nn.Module):
-    def __init__(self, model_config):
-        super(UIE_Net, self).__init__()
-        self.model_config = model_config
-        self.encoder = Encoder(model_config['base_channel'])
-        self.decoder = Decoder(model_config['base_channel'])
+class SimpleNet(nn.Module):
+    def __init__(self, basic_channel=64):
+        super(SimpleNet, self).__init__()
+        self.encoder = Encoder(basic_channel)
+        self.decoder = Decoder(basic_channel)
         
     def forward(self, x):
         # encoder-decoder part
@@ -121,3 +116,9 @@ class UIE_Net(nn.Module):
         y = normalize_img(self.decoder(x, x1, x2, x3, x4))
         
         return y
+
+if __name__ == "__main__":
+    model = SimpleNet().cuda()
+    x = torch.rand((1,3,512,512)).cuda()
+    y = model(x)
+    print(y)
