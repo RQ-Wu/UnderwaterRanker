@@ -6,14 +6,14 @@ dataset:
     crop_size: 128
     bs : 16
     num_workers : 2
-    train_list_path : dataset/train_list.txt
-    test_list_path : dataset/test_list.txt
+    train_list_path : dataset/uie_train_list.txt
+    test_list_path : dataset/uie_test_list.txt
 
 model:
     model_name: UColor
     resume_ckpt_path:
     cuda: true
-    parallel: true
+    parallel: false
     init_way:  # Gaussian initial distribution
 
 train:
@@ -22,17 +22,17 @@ train:
     epoch: 1000
     lr: 1.0e-4
     optimizer: Adam
-    lr_schedule: 
-    lr_schedule_arg: 
+    lr_scheduler: 
+    lr_scheduler_arg: 
 
     # loss setting
     loss_vgg: true
-    loss_rank: true
+    loss_rank: false
     loss_coff: [1, 0.01, 0.01]
 
     ranker_args:
         model_name: MyCoaT
-        resume_ckpt_path: ../myrank/checkpoints/MyCoaT/mycoatbest100.pth
+        resume_ckpt_path: ranker_output/MyCoaT/dynamic/checkpoints/checkpoint_100best.pth
         cuda: true
         parallel: false
         patch_size: 4
@@ -41,9 +41,12 @@ train:
         parallel_depth: 6
         num_heads: 8
         mlp_ratios: [4, 4, 4, 4]
+        add_historgram: true
+        his_channel: 192
+        connect_type: dynamic
     
 experiments:
-    save_root: output/Ucolor/with_ranker_0.01_grad
+    save_root: uie_output/Ucolor/without_ranker
     log: logs
     checkpoints: checkpoints
     results: results

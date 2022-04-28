@@ -107,7 +107,7 @@ class Dataset_Ucolor(data.Dataset):
             rgb_img = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(rgb_img)
             lab_img = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(lab_img)
             hsv_img = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(hsv_img)
-            gt_img = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(gt_img)
+            # gt_img = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(gt_img)
             depth = transforms.Resize((img_h // 4 * 4, img_w // 4 * 4))(depth)
             output = {
                 'rgb_img': rgb_img / 255.0,
@@ -116,7 +116,7 @@ class Dataset_Ucolor(data.Dataset):
                 'depth': depth / 255.0,
                 'gt_img': gt_img / 255.0,
             }
-            return output, self.filenames[index].rstrip()
+            return output
     
     def __len__(self):
         return len(self.filenames)

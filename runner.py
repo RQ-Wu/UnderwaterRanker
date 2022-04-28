@@ -127,9 +127,11 @@ class UIE_Runner():
                 for iter_num, data in enumerate(self.test_dataloader):
                     _, _, h, w = data['gt_img'].shape
                     gt_img = data['gt_img'][0].permute(1, 2, 0).detach().numpy()
+                    if self.model_opt['cuda']:
+                        data = {key:value.cuda() for key, value in data.items()}
 
                     upsample = nn.UpsamplingBilinear2d((h, w))
-                    pred_img = upsample(self.model(data['raw_img'].cuda()))
+                    pred_img = upsample(utils.normalize_img(self.model(**data)))
                     pred_img = pred_img[0].permute(1, 2, 0).detach().cpu().numpy()
                     # pred_img = io.imread(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0])) / 255.0
 
@@ -172,8 +174,8 @@ class UIE_Runner():
     
     def build_loss(self, pred, gt, ranker_model):
         loss_total = 0
-        Loss_L1 = nn.L1Loss().cuda()
-        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L1(pred, gt)
+        Loss_L2 = nn.MSELoss().cuda()
+        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L2(pred, gt)
 
         if self.training_opt['loss_vgg']:
             Loss_VGG = loss.perception_loss().cuda()
