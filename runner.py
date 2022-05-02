@@ -67,7 +67,8 @@ class UIE_Runner():
             )
             if np.max(np.array(psnr_list)) == psnr or np.max(np.array(ssim_list)) == ssim:
                 self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> PSNR: {psnr}, SSIM: {ssim}\n")
-                self.save(epoch, psnr, ssim)
+                if epoch > 50:
+                    self.save(epoch, psnr, ssim)
             print()
 
     def main_test_loop(self):

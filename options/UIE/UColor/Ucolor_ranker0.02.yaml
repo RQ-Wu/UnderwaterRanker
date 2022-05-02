@@ -11,7 +11,7 @@ dataset:
 
 model:
     model_name: UColor
-    resume_ckpt_path: uie_output/Ucolor/with_ranker_0.005/checkpoints/checkpoint_139.pth
+    resume_ckpt_path:
     cuda: true
     parallel: false
     init_way:  # Gaussian initial distribution
@@ -28,7 +28,7 @@ train:
     # loss setting
     loss_vgg: true
     loss_rank: true
-    loss_coff: [1, 0.01, 0.005]
+    loss_coff: [1, 0.01, 0.02]
 
     ranker_args:
         model_name: MyCoaT
@@ -46,7 +46,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/Ucolor/with_ranker_0.005
+    save_root: uie_output/Ucolor/with_ranker_0.02
     log: logs
     checkpoints: checkpoints
     results: results
