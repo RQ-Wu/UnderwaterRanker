@@ -121,6 +121,77 @@ class Dataset_Ucolor(data.Dataset):
     def __len__(self):
         return len(self.filenames)
 
+class Dataset_WaterNet(data.Dataset):
+    def __init__(self, opt, type="train", **kwargs):
+        self.opt = opt
+        self.type = type
+        self.filenames = open(opt[self.type + '_list_path']).readlines()
+
+    def __getitem__(self, index):
+        filepath = os.path.join(self.opt['root'], self.filenames[index].rstrip())
+        all_data = np.load(filepath[:-3] + 'npy')
+
+        images = transforms.ToTensor()(all_data[:, :, :3]).type(torch.float32)
+        images_wb = transforms.ToTensor()(all_data[:, :, 3:6]).type(torch.float32)
+        images_gc = transforms.ToTensor()(all_data[:, :, 6:9]).type(torch.float32)
+        images_ce = transforms.ToTensor()(all_data[:, :, 9:12]).type(torch.float32)
+        gt_img = transforms.ToTensor()(all_data[:, :, 12:]).type(torch.float32)
+
+        # data aug for training
+        if self.type == "train":
+            # resize
+            images = transforms.Resize((112, 112))(images)
+            images_wb = transforms.Resize((112, 112))(images_wb)
+            images_gc = transforms.Resize((112, 112))(images_gc)
+            images_ce = transforms.Resize((112, 112))(images_ce)
+            gt_img = transforms.Resize((112, 112))(gt_img)
+
+            # random vertical flip
+            if np.random.rand(1) < 0.5:
+                images = transforms.RandomVerticalFlip(p=1)(images)
+                images_wb = transforms.RandomVerticalFlip(p=1)(images_wb)
+                images_gc = transforms.RandomVerticalFlip(p=1)(images_gc)
+                images_ce = transforms.RandomVerticalFlip(p=1)(images_ce)
+                gt_img = transforms.RandomVerticalFlip(p=1)(gt_img)
+            # random horizontal flip
+            if np.random.rand(1) < 0.5:
+                images = transforms.RandomHorizontalFlip(p=1)(images)
+                images_wb = transforms.RandomHorizontalFlip(p=1)(images_wb)
+                images_gc = transforms.RandomHorizontalFlip(p=1)(images_gc)
+                images_ce = transforms.RandomHorizontalFlip(p=1)(images_ce)
+                gt_img = transforms.RandomHorizontalFlip(p=1)(gt_img)
+
+            # random rotation
+            angle = (np.random.rand(1) * 360) // 90 * 90
+            angle = angle[0]
+            images = transFunc.rotate(images, angle)
+            images_wb = transFunc.rotate(images_wb, angle)
+            images_gc = transFunc.rotate(images_gc, angle)
+            images_ce = transFunc.rotate(images_ce, angle)
+            gt_img = transFunc.rotate(gt_img, angle)
+            output = {
+                'images': images,
+                'images_wb': images_wb,
+                'images_ce': images_ce,
+                'images_gc': images_gc,
+                'gt_img': gt_img
+            }
+            return output
+                    
+        # make sure resolution will not be changed during encoder-decoder stage
+        elif self.type == "test":
+            output = {
+                'images': images,
+                'images_wb': images_wb,
+                'images_ce': images_ce,
+                'images_gc': images_gc,
+                'gt_img': gt_img
+            }
+            return output
+    
+    def __len__(self):
+        return len(self.filenames)
+
 class Dataset_Ranker(data.Dataset):
     def __init__(self, opt, type="train"):
         self.opt = opt

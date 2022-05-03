@@ -77,7 +77,7 @@ class WaterNet(nn.Module):
         self.ftu_ce = FTU(init_weights=init_weights)
         self.ftu_gc = FTU(init_weights=init_weights)
 
-    def forward(self, images, images_wb, images_ce, images_gc):
+    def forward(self, images, images_wb, images_ce, images_gc, **kwargs):
         weight_wb ,weight_ce, weight_gc = self.main_branch(images, images_wb, images_ce, images_gc)
         wb = self.ftu_wb(images, images_wb)
         ce = self.ftu_ce(images, images_ce)

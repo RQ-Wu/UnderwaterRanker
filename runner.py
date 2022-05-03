@@ -49,7 +49,7 @@ class UIE_Runner():
             psnr_list.append(ckpt['max_psnr'])
             ssim_list.append(ckpt['max_ssim'])
             start_epoch = ckpt['epoch'] + 1
-
+        print(self.model)
         for epoch in range(start_epoch, self.training_opt['epoch']):
             print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))
             loss = self.train_loop(epoch)
@@ -142,9 +142,6 @@ class UIE_Runner():
                     psnr_meter.update(psnr)
                     ssim_meter.update(ssim)
 
-                    if self.test_opt['save_img']:
-                        io.imsave(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0]),
-                                result[0].permute(1, 2, 0).cpu().detach().numpy())
                     # update bar
                     if checkpoint_path:
                         t_bar.set_description('checkpoints: %s, psnr:%.6f, ssim:%.6f' % (checkpoint_path.split('/')[-1], psnr_meter.avg, ssim_meter.avg))
@@ -175,8 +172,8 @@ class UIE_Runner():
     
     def build_loss(self, pred, gt, ranker_model):
         loss_total = 0
-        Loss_L2 = nn.MSELoss().cuda()
-        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L2(pred, gt)
+        Loss_L1 = nn.L1Loss().cuda()
+        loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L1(pred, gt)
 
         if self.training_opt['loss_vgg']:
             Loss_VGG = loss.perception_loss().cuda()
