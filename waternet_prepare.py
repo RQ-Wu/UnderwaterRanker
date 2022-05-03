@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 import numpy as np
 import cv2 as cv
 import os
-=======
-import cv2 as cv
-import numpy as np
->>>>>>> 96e026984d06cd3339529988d27a10f980506d0f
 
 def white_balance(img, percent=0.5):
 #    img=cv.cvtColor(img, cv.COLOR_RGB2BGR)
@@ -76,3 +71,48 @@ def HE(image):
     ce_test = cv.cvtColor(ce_test,cv.COLOR_BGR2RGB) / 255.0 
 
     return ce_test
+
+def HE_waternet(image):
+    ce_test = cv.cvtColor(image,cv.COLOR_BGR2Lab)
+    clahe = cv.createCLAHE(clipLimit=0.01 * 255, tileGridSize=(8,8))
+    ce_test[:, :, 0] = clahe.apply(ce_test[:, :, 0])
+    ce_test = cv.cvtColor(ce_test,cv.COLOR_Lab2BGR)
+    # cv.imshow('CLAHE waternet', ce_test)
+    # cv.waitKey(0)
+    #cv.destroyAllWindows()
+    ce_test = cv.cvtColor(ce_test,cv.COLOR_BGR2RGB) / 255.0 
+
+    return ce_test
+
+def preprocess(x):
+    return {
+        'wb': white_balance_waternet(x),
+        'ce': HE_waternet(x),
+        'gc': adjust_gamma_waternet(x),
+        'x': x
+    }
+
+if __name__ == '__main__':
+    if not os.path.exists('../dataset/UIEB_all/WaterNet_npy'):
+        os.mkdir('../dataset/UIEB_all/WaterNet_npy')
+    for i, filename in enumerate(os.listdir('../dataset/UIEB_all/UIEB/raw-890')):
+        print(i+1, '/', 890, 'start handling ' + filename)
+        img_test = cv.imread(os.path.join('../dataset/UIEB_all/UIEB/raw-890', filename), cv.IMREAD_COLOR)
+        wb_test = white_balance(img_test)
+        gc_test = adjust_gamma(img_test)
+        ce_test = HE(img_test)
+        rgb_img = cv.cvtColor(img_test, cv.COLOR_BGR2RGB) / 255.0
+        gt_img = cv.imread(os.path.join('../dataset/UIEB_all/UIEB/reference-890/reference-890', filename), cv.IMREAD_COLOR)
+        gt_img = cv.cvtColor(gt_img, cv.COLOR_BGR2RGB) / 255.0
+
+        all_img = np.concatenate((rgb_img, wb_test, gc_test, ce_test, gt_img), axis=2)
+        print(all_img.shape)
+        # print(os.path.join('../dataset/UIEB_all/Ucolor_npy', filename[:-4]))
+        np.save(os.path.join('../dataset/UIEB_all/WaterNet_npy', filename[:-4]), all_img.astype(np.float32))
+
+        print(i+1, '/', 890, filename + ' has been added into database successfully!')
+        print()
+
+    all_img = np.load(os.path.join('../dataset/UIEB_all/Ucolor_npy', '752_img_.npy'))
+    print(all_img.shape)
+
