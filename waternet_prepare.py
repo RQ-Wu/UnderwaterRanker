@@ -89,7 +89,7 @@ def preprocess(x):
         'wb': white_balance_waternet(x),
         'ce': HE_waternet(x),
         'gc': adjust_gamma_waternet(x),
-        'x': x
+        'x': cv.cvtColor(x, cv.COLOR_BGR2RGB) / 255.0
     }
 
 if __name__ == '__main__':
@@ -98,10 +98,13 @@ if __name__ == '__main__':
     for i, filename in enumerate(os.listdir('../dataset/UIEB_all/UIEB/raw-890')):
         print(i+1, '/', 890, 'start handling ' + filename)
         img_test = cv.imread(os.path.join('../dataset/UIEB_all/UIEB/raw-890', filename), cv.IMREAD_COLOR)
-        wb_test = white_balance(img_test)
-        gc_test = adjust_gamma(img_test)
-        ce_test = HE(img_test)
         rgb_img = cv.cvtColor(img_test, cv.COLOR_BGR2RGB) / 255.0
+        wb_test = cv.imread(os.path.join('../dataset/UIEB_all/input_wb_train', filename), cv.IMREAD_COLOR)
+        wb_test = cv.cvtColor(wb_test, cv.COLOR_BGR2RGB) / 255.0
+        gc_test = cv.imread(os.path.join('../dataset/UIEB_all/input_gc_train', filename), cv.IMREAD_COLOR)
+        gc_test = cv.cvtColor(gc_test, cv.COLOR_BGR2RGB) / 255.0
+        ce_test = cv.imread(os.path.join('../dataset/UIEB_all/input_ce_train', filename), cv.IMREAD_COLOR)
+        ce_test = cv.cvtColor(ce_test, cv.COLOR_BGR2RGB) / 255.0
         gt_img = cv.imread(os.path.join('../dataset/UIEB_all/UIEB/reference-890/reference-890', filename), cv.IMREAD_COLOR)
         gt_img = cv.cvtColor(gt_img, cv.COLOR_BGR2RGB) / 255.0
 

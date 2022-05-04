@@ -44,7 +44,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/WaterNet/with_ranker_0.025
+    save_root: uie_output/WaterNet_fix/with_ranker_0.025
     log: logs
     checkpoints: checkpoints
     results: results

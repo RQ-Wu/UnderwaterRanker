@@ -17,6 +17,10 @@ import time
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 
+seed = 2022
+torch.manual_seed(seed)            # 为CPU设置随机种子
+torch.cuda.manual_seed(seed)       # 为当前GPU设置随机种子
+torch.cuda.manual_seed_all(seed)   # 为所有GPU设置随机种子
 class UIE_Runner():
     def __init__(self, opt_path, type='train'):
         options = utils.get_option(opt_path)
