@@ -176,7 +176,7 @@ class UIE_Runner():
         loss_total = loss_total + self.training_opt['loss_coff'][0] * Loss_L1(pred, gt)
 
         if self.training_opt['loss_vgg']:
-            Loss_VGG = loss.perception_loss().cuda()
+            Loss_VGG = loss.make_perception_loss(self.training_opt.get('loss_vgg_args')).cuda()
             loss_total = loss_total + self.training_opt['loss_coff'][1] * Loss_VGG(pred, gt)
             del Loss_VGG
         if self.training_opt['loss_rank']:
