@@ -13,6 +13,9 @@ import logging
 def get_option(opt_path):
     with open(opt_path, 'r') as f:
         option = yaml.safe_load(f)
+    
+    option.setdefault('seed', 2022)
+
     return option
 
 def build_optimizer(opt, model):
