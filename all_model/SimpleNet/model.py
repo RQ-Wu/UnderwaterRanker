@@ -74,8 +74,9 @@ class Encoder(nn.Module):
         return x1, x2, x3, x4
     
 class Decoder(nn.Module):
-    def __init__(self, basic_channel):
+    def __init__(self, basic_channel, is_residual=True):
         super(Decoder, self).__init__()
+        self.is_residual = is_residual
         self.d_stage4 = nn.Sequential(
             BasicBlock(basic_channel * 8, basic_channel * 4),
             nn.UpsamplingBilinear2d(scale_factor=2)
@@ -102,18 +103,36 @@ class Decoder(nn.Module):
         y1 = self.d_stage2(y2 + x2)
         y = self.output(self.d_stage1(y1 + x1))
         
-        return y + x
+        if self.is_residual:
+            return y + x
+        else:
+            return y
 
 class SimpleNet(nn.Module):
-    def __init__(self, basic_channel=64):
+    def __init__(self, basic_channel=64, is_residual=True, tail='norm'):
         super(SimpleNet, self).__init__()
+        self.tail = tail
         self.encoder = Encoder(basic_channel)
-        self.decoder = Decoder(basic_channel)
+        self.decoder = Decoder(basic_channel, is_residual=is_residual)
+        if self.tail == 'IN+clip' or self.tail == 'IN+sigmoid':
+            self.IN = nn.InstanceNorm2d(3)
         
     def forward(self, raw_img, **kwargs):
         # encoder-decoder part
         x1, x2, x3, x4 = self.encoder(raw_img)
-        y = normalize_img(self.decoder(raw_img, x1, x2, x3, x4))
+        y = self.decoder(raw_img, x1, x2, x3, x4)
+        if self.tail == 'norm':
+            y = normalize_img(y)
+        elif self.tail == 'clip':
+            y = torch.clamp(y, min=0.0, max=1.0)
+        elif self.tail == 'sigmoid':
+            y = torch.sigmoid(y)
+        elif self.tail == 'IN+clip':
+            y = torch.clamp(self.IN(y), min=0.0, max=1.0)
+        elif self.tail == 'IN+sigmoid':
+            y = torch.sigmoid(self.IN(y))
+        elif self.tail == 'none':
+            y = y
         
         return y
 
