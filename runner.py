@@ -26,9 +26,8 @@ def manual_seed(seed):
     torch.cuda.manual_seed_all(seed)   # 为所有GPU设置随机种子
 
 class UIE_Runner():
-    def __init__(self, opt_path, type='train'):
-        options = utils.get_option(opt_path)
-        manual_seed(options['seed'])
+    def __init__(self, options, type='train'):
+        # manual_seed(options['seed'])
 
         self.type = type
         self.dataset_opt = options['dataset']
@@ -58,6 +57,9 @@ class UIE_Runner():
             psnr_list.append(ckpt['max_psnr'])
             ssim_list.append(ckpt['max_ssim'])
             start_epoch = ckpt['epoch'] + 1
+            for _ in range(start_epoch * 50):
+                self.lr_scheduler.step()
+
         print(self.model)
         for epoch in range(start_epoch, self.training_opt['epoch']):
             print('================================ %s %d / %d ================================' % (self.experiments_opt['save_root'].split('/')[-1], epoch, self.training_opt['epoch']))

@@ -16,12 +16,12 @@ model:
     parallel: false
     basic_channel: 64
     is_residual: false
-    tail: sigmoid
+    tail: norm
 
 train:
     # basic hyper parameters setting
     start_epoch: 0
-    epoch: 1000
+    epoch: 300
     lr: 1.0e-3
     optimizer: Adam
     lr_scheduler: CosineAnnealingLR
@@ -29,8 +29,8 @@ train:
 
     # loss setting
     loss_vgg: false
-    loss_rank: false
-    loss_coff: [1, 0.0, 0.025]
+    loss_rank: true
+    loss_coff: [1, 0.0, 0.015]
 
     ranker_args:
         model_name: MyCoaT
@@ -48,7 +48,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/SimpleNet/sigmoid_tail
+    save_root: uie_output/SimpleNet/no_residual_ranker0.015
     log: logs
     checkpoints: checkpoints
     results: results

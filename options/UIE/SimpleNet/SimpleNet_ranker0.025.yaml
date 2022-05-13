@@ -11,7 +11,7 @@ dataset:
 
 model:
     model_name: SimpleNet
-    resume_ckpt_path:
+    resume_ckpt_path: 
     cuda: true
     parallel: false
     basic_channel: 64

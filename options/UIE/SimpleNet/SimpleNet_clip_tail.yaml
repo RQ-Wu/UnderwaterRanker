@@ -11,17 +11,17 @@ dataset:
 
 model:
     model_name: SimpleNet
-    resume_ckpt_path:
+    resume_ckpt_path: uie_output/SimpleNet/clip_tail_2/checkpoints/checkpoint_185.pth
     cuda: true
     parallel: false
     basic_channel: 64
-    is_residual: true
+    is_residual: false
     tail: clip
 
 train:
     # basic hyper parameters setting
     start_epoch: 0
-    epoch: 1000
+    epoch: 300
     lr: 1.0e-3
     optimizer: Adam
     lr_scheduler: CosineAnnealingLR

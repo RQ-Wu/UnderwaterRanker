@@ -15,7 +15,7 @@ model:
     cuda: true
     parallel: false
     basic_channel: 64
-    is_residual: true
+    is_residual: false
     tail: IN+clip
 
 train:
