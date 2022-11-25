@@ -1,6 +1,11 @@
-## UIERanker
-- [x] get a baseline ranker
-- [x] train uie model with ranker, and improve the performance
-- [x] modify the architecture of ranker
+# Underwater Ranker: Learn Which Is Better and How to Be Better (AAAI 2023)
 
-2022.4.23 histogram work!
+![Python 3.6](https://img.shields.io/badge/python-3.6-g) ![pytorch 1.10.2](https://img.shields.io/badge/pytorch-1.10.2-blue.svg)
+
+This repository contains the official implementation of the following paper:
+> **Underwater Ranker: Learn Which Is Better and How to Be Better**<br>
+> Chunle Guo<sup>#</sup>, Ruiqi Wu<sup>#</sup>, Xin Jin, Zhi Chai, Weidong Zhang, Chongyi Li<sup>*</sup><br>
+> Proceedings of the AAAI conference on artificial intelligence (AAAI), 2023<br>
+
+[[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [[Video]()] [Project (TBD)]  [Dataset (TBD)]
+

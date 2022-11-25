@@ -134,7 +134,10 @@ class UIE_Runner():
             if checkpoint_path:
                 ckpt_dict = torch.load(checkpoint_path)['net']
                 self.model.load_state_dict(ckpt_dict)
-            utils.make_dir(os.path.join(self.experiments_opt['save_root'], 'results'))
+            if self.test_opt['save_image']:
+                save_root = os.path.join(self.experiments_opt['save_root'], 'results')
+                utils.make_dir(save_root)
+
             with tqdm(total=len(self.test_dataloader)) as t_bar:
                 for iter_num, data in enumerate(self.test_dataloader):
                     _, _, h, w = data['gt_img'].shape
@@ -145,8 +148,8 @@ class UIE_Runner():
                     upsample = nn.UpsamplingBilinear2d((h, w))
                     pred_img = upsample(utils.normalize_img(self.model(**data)))
                     pred_img = pred_img[0].permute(1, 2, 0).detach().cpu().numpy()
-                    cv2.imwrite(os.path.join(self.experiments_opt['save_root'], 'results', str(iter_num)+'.png'), pred_img[:, :, ::-1] * 255.0)
-                    # pred_img = io.imread(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0])) / 255.0
+                    if self.test_opt['save_image']:
+                        cv2.imwrite(os.path.join(self.experiments_opt['save_root'], 'results', str(iter_num)+'.png'), pred_img[:, :, ::-1] * 255.0)
 
                     psnr = utils.calc_psnr(pred_img, gt_img, is_for_torch=False)
                     ssim = utils.calc_ssim(pred_img, gt_img, is_for_torch=False)
