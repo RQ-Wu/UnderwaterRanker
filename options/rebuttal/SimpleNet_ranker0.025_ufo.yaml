@@ -1,0 +1,59 @@
+# setting for training UColor with Ranker loss
+
+dataset:
+    dataset_name : Dataset_UFO
+    root_train: ../dataset/UFO120/train_val/
+    root_test : ../dataset/UFO120/TEST/
+    crop_size: 240
+    bs : 16
+    num_workers : 2
+    train_list_path : dataset/ufo_train_list.txt
+    test_list_path : dataset/ufo_test_list.txt
+
+model:
+    model_name: SimpleNet
+    resume_ckpt_path: 
+    cuda: true
+    parallel: false
+    basic_channel: 64
+
+train:
+    # basic hyper parameters setting
+    start_epoch: 0
+    epoch: 1000
+    lr: 1.0e-3
+    optimizer: Adam
+    lr_scheduler: CosineAnnealingLR
+    lr_scheduler_arg: {T_max : 1000}
+
+    # loss setting
+    loss_vgg: false
+    loss_rank: true
+    loss_coff: [1, 0.0, 0.025]
+
+    ranker_args:
+        model_name: MyCoaT
+        resume_ckpt_path: ranker_output/MyCoaT/dynamic/checkpoints/checkpoint_100best.pth
+        cuda: true
+        parallel: false
+        patch_size: 4
+        embed_dims: [152, 320, 320, 320]
+        serial_depths: [2, 2, 2, 2]
+        parallel_depth: 6
+        num_heads: 8
+        mlp_ratios: [4, 4, 4, 4]
+        add_historgram: true
+        his_channel: 192
+        connect_type: dynamic
+    
+experiments:
+    save_root: uie_output/SimpleNet/with_ranker_0.025_rebuttal_UFO120_256
+    log: logs
+    checkpoints: checkpoints
+    results: results
+
+test:
+    start_epoch: 0
+    end_epoch: 1
+    test_ckpt_path: uie_output/SimpleNet/with_ranker_0.025/checkpoints/checkpoint_237.pth
+    save_img: false

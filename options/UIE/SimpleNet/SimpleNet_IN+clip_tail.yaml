@@ -15,13 +15,13 @@ model:
     cuda: true
     parallel: false
     basic_channel: 64
-    is_residual: false
+    is_residual: true
     tail: IN+clip
 
 train:
     # basic hyper parameters setting
     start_epoch: 0
-    epoch: 1000
+    epoch: 250
     lr: 1.0e-3
     optimizer: Adam
     lr_scheduler: CosineAnnealingLR
@@ -48,7 +48,7 @@ train:
         connect_type: dynamic
     
 experiments:
-    save_root: uie_output/SimpleNet/IN+clip_tail
+    save_root: uie_output/SimpleNet/IN+clip_tail_residual
     log: logs
     checkpoints: checkpoints
     results: results

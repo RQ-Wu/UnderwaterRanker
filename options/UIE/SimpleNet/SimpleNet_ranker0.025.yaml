@@ -54,5 +54,5 @@ experiments:
 test:
     start_epoch: 0
     end_epoch: 1
-    test_ckpt_path:
+    test_ckpt_path: uie_output/SimpleNet/with_ranker_0.025/checkpoints/checkpoint_237.pth
     save_img: false

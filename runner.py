@@ -17,7 +17,7 @@ import time
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 import random
-
+import cv2
 def manual_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -78,18 +78,18 @@ class UIE_Runner():
             )
             if np.max(np.array(psnr_list)) == psnr or np.max(np.array(ssim_list)) == ssim:
                 self.logger.warning(f"After {epoch+1} epochs trainingg, model achecieves best performance ==> PSNR: {psnr}, SSIM: {ssim}\n")
-                if epoch > 50:
-                    self.save(epoch, psnr, ssim)
+                # if epoch > 50:
+                self.save(epoch, psnr, ssim)
             print()
 
     def main_test_loop(self):
-        if self.test_opt['start_epoch'] >=0 and self.test_opt['end_epoch'] >=0:
+        if self.test_opt['start_epoch'] >=0 and self.test_opt['end_epoch'] >=0 and self.test_opt['test_ckpt_path'] is None:
             for i in range(self.test_opt['start_epoch'], self.test_opt['end_epoch']):
                 checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], f'checkpoint_{i}.pth')
                 self.test_loop(checkpoint_name, i)
         else:
-            checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], self.test_opt['test_ckpt_path'])
-            self.test_loop(checkpoint_name)
+            # checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], self.test_opt['test_ckpt_path'])
+            self.test_loop(self.test_opt['test_ckpt_path'])
         
     def train_loop(self, epoch_num):
         total_loss = 0
@@ -134,7 +134,7 @@ class UIE_Runner():
             if checkpoint_path:
                 ckpt_dict = torch.load(checkpoint_path)['net']
                 self.model.load_state_dict(ckpt_dict)
-
+            utils.make_dir(os.path.join(self.experiments_opt['save_root'], 'results'))
             with tqdm(total=len(self.test_dataloader)) as t_bar:
                 for iter_num, data in enumerate(self.test_dataloader):
                     _, _, h, w = data['gt_img'].shape
@@ -145,6 +145,7 @@ class UIE_Runner():
                     upsample = nn.UpsamplingBilinear2d((h, w))
                     pred_img = upsample(utils.normalize_img(self.model(**data)))
                     pred_img = pred_img[0].permute(1, 2, 0).detach().cpu().numpy()
+                    cv2.imwrite(os.path.join(self.experiments_opt['save_root'], 'results', str(iter_num)+'.png'), pred_img[:, :, ::-1] * 255.0)
                     # pred_img = io.imread(os.path.join(self.experiments_opt['save_root'], self.experiments_opt['results'], filename[0])) / 255.0
 
                     psnr = utils.calc_psnr(pred_img, gt_img, is_for_torch=False)

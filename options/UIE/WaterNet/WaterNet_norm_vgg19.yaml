@@ -2,7 +2,7 @@
 
 dataset:
     dataset_name : Dataset_WaterNet
-    root : ../dataset/UIEB_all/WaterNet_npy
+    root : ../dataset/WaterNet_npy
     bs : 16
     num_workers : 2
     train_list_path : dataset/uie_train_list.txt
