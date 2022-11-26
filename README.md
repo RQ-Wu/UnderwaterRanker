@@ -9,3 +9,14 @@ This repository contains the official implementation of the following paper:
 
 [[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [[Video]()] [Project (TBD)]  [Dataset (TBD)]
 
+## Dependencies and Installation
+1. Cloen Repo
+    ```bash
+    git clone https://github.com/RQ-Wu/UnderwaterRanker.git
+    cd UnderwaterRanker
+    ```
+
+2. Create Conda Enviroment
+    ```bash
+    conda env create -f 
+    ```
