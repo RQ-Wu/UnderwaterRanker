@@ -11,7 +11,8 @@ parser.add_argument('--save_image', action="store_true")
 args = parser.parse_args()
 
 options = utils.get_option(args.opt_path)
-options['test']['save_image'] = args.save_image
+if args.save_image:
+    options['test']['save_image'] = args.save_image
 if args.test_ckpt_path:
     options['test']['test_ckpt_path'] = args.test_ckpt_path
     
