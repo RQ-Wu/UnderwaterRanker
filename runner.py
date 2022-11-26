@@ -88,7 +88,6 @@ class UIE_Runner():
                 checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], f'checkpoint_{i}.pth')
                 self.test_loop(checkpoint_name, i)
         else:
-            # checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], self.test_opt['test_ckpt_path'])
             self.test_loop(self.test_opt['test_ckpt_path'])
         
     def train_loop(self, epoch_num):
@@ -124,9 +123,9 @@ class UIE_Runner():
             ranker_model=ranker_model.cpu()
         return total_loss
             
-    def test_loop(self, checkpoint_path=None, epoch_num=None):
-        if checkpoint_path == None and epoch_num == None:
-            raise NotImplementedError('checkpoint_name and epoch_num can not both be NoneType!')
+    def test_loop(self, checkpoint_path=None, epoch_num=-1):
+        if checkpoint_path == None:
+            raise NotImplementedError('checkpoint_name can not be NoneType!')
 
         with torch.no_grad():
             psnr_meter = AverageMeter()
@@ -159,8 +158,8 @@ class UIE_Runner():
 
                     # update bar
                     if checkpoint_path:
-                        t_bar.set_description('checkpoints: %s, psnr:%.6f, ssim:%.6f' % (checkpoint_path.split('/')[-1], psnr_meter.avg, ssim_meter.avg))
-                    elif epoch_num >= 0:
+                        t_bar.set_description('checkpoint: %s, psnr:%.6f, ssim:%.6f' % (checkpoint_path.split('/')[-1], psnr_meter.avg, ssim_meter.avg))
+                    if epoch_num >= 0:
                         t_bar.set_description('Epoch:%d/%d, psnr:%.6f, ssim:%.6f' % (epoch_num, self.training_opt['epoch'], psnr_meter.avg, ssim_meter.avg))
 
                     t_bar.update(1)
@@ -200,9 +199,7 @@ class UIE_Runner():
         return loss_total
 
 class Ranker_Runner():
-    def __init__(self, opt_path, type='train'):
-        options = utils.get_option(opt_path)
-
+    def __init__(self, options, type='train'):
         self.type = type
         self.dataset_opt = options['dataset']
         self.model_opt = options['model']
@@ -251,13 +248,12 @@ class Ranker_Runner():
             print()
 
     def main_test_loop(self):
-        if self.test_opt['start_epoch'] >=0 and self.test_opt['end_epoch'] >=0:
+        if self.test_opt['start_epoch'] >=0 and self.test_opt['end_epoch'] >=0 and self.test_opt['test_ckpt_path'] is None:
             for i in range(self.test_opt['start_epoch'], self.test_opt['end_epoch']):
                 checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], f'checkpoint_{i}.pth')
                 self.test_loop(checkpoint_name, i)
         else:
-            checkpoint_name = os.path.join(self.experiments_opt['save_root'], self.experiments_opt['checkpoints'], self.test_opt['test_ckpt_path'])
-            self.test_loop(checkpoint_name)
+            self.test_loop(self.test_opt['test_ckpt_path'])
         
     def train_loop(self, epoch_num):
         loss_meter = AverageMeter()
@@ -292,9 +288,9 @@ class Ranker_Runner():
         self.tb_writer.add_scalar('loss/ranker_loss', loss_meter.avg, epoch_num + 1)
         return loss_meter.avg  
             
-    def test_loop(self, checkpoint_path=None, epoch_num=None):
-        if checkpoint_path == None and epoch_num == None:
-            raise NotImplementedError('checkpoint_name and epoch_num can not both be NoneType!')
+    def test_loop(self, checkpoint_path=None, epoch_num=-1):
+        if checkpoint_path == None:
+            raise NotImplementedError('checkpoint_name can not be NoneType!')
 
         with torch.no_grad():
             srocc_meter = AverageMeter()
@@ -323,7 +319,10 @@ class Ranker_Runner():
                         krocc_meter.update(krocc)
 
                         # update bar
-                        t_bar.set_description('Epoch:%d/%d, SROCC:%.6f, KROCC:%.6f' % (epoch_num, self.training_opt['epoch'], srocc_meter.avg, krocc_meter.avg))
+                        if checkpoint_path:
+                            t_bar.set_description('checkpoint:%s, SROCC:%.6f, KROCC:%.6f' % (checkpoint_path, srocc_meter.avg, krocc_meter.avg))
+                        if epoch_num >= 0:
+                            t_bar.set_description('Epoch:%d/%d, SROCC:%.6f, KROCC:%.6f' % (epoch_num, self.training_opt['epoch'], srocc_meter.avg, krocc_meter.avg))
                         t_bar.update(1)
         if epoch_num >= 0:
             self.tb_writer.add_scalar('valid/srocc', srocc_meter.avg, epoch_num + 1)

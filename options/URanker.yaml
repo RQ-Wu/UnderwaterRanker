@@ -1,5 +1,3 @@
-# setting for training UColor with Ranker loss
-
 dataset:
     dataset_name : Dataset_Ranker
     root : ../dataset/UIERank
@@ -42,4 +40,3 @@ test:
     start_epoch: 0
     end_epoch: 1
     test_ckpt_path:
-    save_img: false

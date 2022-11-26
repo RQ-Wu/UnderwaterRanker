@@ -56,9 +56,8 @@ This repository contains the official implementation of the following paper:
 </table>
 
 2. Two datasets used in our work can be downloaded in the links below:
-
-    - URankerSet: [<a href="">Google Drive (TBD)</a>][<a href="">Baidu Disk (TBD)</a>]
-    - Underwater Image Enhancement Benchmark (UIEB): [<a href="https://li-chongyi.github.io/proj_benchmark.html">Link</a>]
+    - URankerSet: [<a href="">Google Drive (TBD)</a>] [<a href="https://pan.baidu.com/s/1K29p3gJWYa1ZM0vMHqI4uA">Baidu Disk (pwd: nuin)</a>]
+    - Underwater Image Enhancement Benchmark (UIEB): [<a href="https://li-chongyi.github.io/proj_benchmark.html">Download Link</a>]
 
     The data is put in dir `./data/`.
 
@@ -105,6 +104,7 @@ python uie_main_train.py --opt_path options.NU2Net.yaml
 
 Run the following commands for evaluation:
 ```bash
+python ranker_main_test.py --opt_path options/URanker.yaml --test_ckpt_path checkpoints/URanker_ckpt.pth
 python uie_main_test.py --opt_path options.NU2Net.yaml --test_ckpt_path checkpoints/NU2Net_ckpt.pth --save_image
 ```
 

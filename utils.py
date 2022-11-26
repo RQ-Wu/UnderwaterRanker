@@ -29,7 +29,7 @@ def build_optimizer(opt, model):
     return optimizer
 
 def build_lr_scheduler(opt, optimizer):
-    lr_scheduler_name = opt['lr_scheduler']
+    lr_scheduler_name = opt['lr_scheduler'] if 'lr_scheduler' in opt.keys() else None
     if lr_scheduler_name:
         try:
             lr_scheduler_class = getattr(getattr(torch.optim, 'lr_scheduler'), lr_scheduler_name)
