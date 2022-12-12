@@ -107,7 +107,7 @@ python uie_main_test.py --opt_path options.NU2Net.yaml --test_ckpt_path checkpoi
 ## Citation
 If you find our repo useful for your research, please cite us:
 ```
-@inproceedings{qin2020ffa,
+@inproceedings{guo2023uranker,
   title={Underwater Ranker: Learn Which Is Better and How to Be Better},
   author={Guo, Chunle and Wu, Ruiqi and Jin, Xin and Han, Linghao and Chai, Zhi and Zhang, Weidong and Li, Chongyi},
   booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
