@@ -7,7 +7,7 @@ This repository contains the official implementation of the following paper:
 > Chunle Guo<sup>#</sup>, Ruiqi Wu<sup>#</sup>, Xin Jin, Linghao Han, Zhi Chai, Weidong Zhang, Chongyi Li<sup>*</sup><br>
 > Proceedings of the AAAI conference on artificial intelligence (AAAI), 2023<br>
 
-[[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [Project (TBD)]  [Dataset (TBD)] [[Video]()]
+[[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [Project (TBD)]  [[Dataset](https://pan.baidu.com/s/1K29p3gJWYa1ZM0vMHqI4uA)] [[Video](https://rq-wu.github.io/images/URanker/video.mp4)]
 
 ## Dependencies and Installation
 1. Cloen Repo
