@@ -1,4 +1,4 @@
-# Underwater Ranker: Learn Which Is Better and How to Be Better (AAAI 2023)
+# Underwater Ranker: Learn Which Is Better and How to Be Better (AAAI 2023, Oral Presentation)
 
 ![Python 3.6](https://img.shields.io/badge/python-3.6-g) ![pytorch 1.10.2](https://img.shields.io/badge/pytorch-1.10.2-blue.svg)
 
