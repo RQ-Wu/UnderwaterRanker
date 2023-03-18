@@ -10,7 +10,7 @@ This repository contains the official implementation of the following paper:
 [[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [[Project](https://li-chongyi.github.io/URanker_files/)]  [[Dataset (pwd: nuin)](https://pan.baidu.com/s/1K29p3gJWYa1ZM0vMHqI4uA)]
 
 ## Dependencies and Installation
-1. Cloen Repo
+1. Clone Repo
     ```bash
     git clone https://github.com/RQ-Wu/UnderwaterRanker.git
     cd UnderwaterRanker
