@@ -9,6 +9,11 @@ This repository contains the official implementation of the following paper:
 
 [[Arxiv Paper](https://arxiv.org/abs/2208.06857)]  [中文版 (TBD)] [[Project](https://li-chongyi.github.io/URanker_files/)]  [[Dataset (pwd: nuin)](https://pan.baidu.com/s/1K29p3gJWYa1ZM0vMHqI4uA)]
 
+## News
+[07/05/2023] We release the <a href="https://drive.google.com/drive/folders/1foW7uXG0GfdGzIDQEhXA82PJryGRQ3aM?usp=sharing">Google Drive</a> link of our model checkpoints.
+[03/30/2023] Our Uranker has been add in <a href="https://github.com/chaofengc/IQA-PyTorch">Pytorch IQA</a>.
+[01/11/2023] Our paper was awarded oral presentation qualification by AAAI.
+
 ## Dependencies and Installation
 1. Clone Repo
     ```bash
@@ -40,7 +45,7 @@ This repository contains the official implementation of the following paper:
     <td>URanker</td>
     <th>0.8655 / 0.7402</th>
     <th rowspan="2">
-    [<a href="">Google Drive (TBD)</a>] 
+    [<a href="https://drive.google.com/drive/folders/1foW7uXG0GfdGzIDQEhXA82PJryGRQ3aM?usp=sharing">Google Drive</a>] 
     [<a href="https://pan.baidu.com/s/1rImZRgmlRPvVIf7n9_rNTw?pwd=fu7y">Baidu Disk (pwd: fu7y)</a>]
     </th>
 </tr>
