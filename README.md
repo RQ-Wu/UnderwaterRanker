@@ -11,7 +11,7 @@ This repository contains the official implementation of the following paper:
 
 ## News
 - [07/05/2023] We released the <a href="https://drive.google.com/drive/folders/1foW7uXG0GfdGzIDQEhXA82PJryGRQ3aM?usp=sharing">Google Drive</a> link of our model checkpoints.
-- [03/30/2023] Our Uranker has been added in <a href="https://github.com/chaofengc/IQA-PyTorch">Pytorch IQA</a>.
+- [03/30/2023] Our URanker has been added in <a href="https://github.com/chaofengc/IQA-PyTorch">Pytorch IQA</a>.
 - [01/11/2023] Our paper was awarded oral presentation qualification by AAAI.
 
 ## Dependencies and Installation
@@ -21,7 +21,7 @@ This repository contains the official implementation of the following paper:
     cd UnderwaterRanker
     ```
 
-2. Create Conda Enviroment
+2. Create Conda Environment
     ```bash
     conda env create -f environment.yaml
     conda activate underwater_ranker
@@ -94,7 +94,7 @@ python uie_demo.py \
 ```
 
 ### Training & Evaluation
-Our training and evaluation confiures are provided in `options/URanker.yaml` (for URanker) and `options/NU2Net.yaml` (for NU<sup>2</sup>Net)
+Our training and evaluation configures are provided in `options/URanker.yaml` (for URanker) and `options/NU2Net.yaml` (for NU<sup>2</sup>Net)
 
 Run the following commands for training:
 
